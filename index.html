@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lunch?">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FDF6EC">
+<meta name="description" content="Find and generate recipes from what's in your fridge.">
+<!-- Apple touch icon (inline SVG-as-data-uri plate emoji fallback) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23FDF6EC'/%3E%3Ctext x='90' y='125' font-size='100' text-anchor='middle'%3E🍽%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E🍽%3C/text%3E%3C/svg%3E">
+<title>What for Lunch?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cr:#FDF6EC;--cw:#FFFAF4;--ct:#E8432D;--ctd:#C23520;
+  --cg:#2D6A4F;--cgl:#52B788;--cm:#D4920A;--cb:#F9E4A0;
+  --cp:#F7C59F;--ck:#5C3D1E;--ckl:#8B6343;--cs:#F0EAE0;
+  --sh:0 2px 14px rgba(92,61,30,.10);--shl:0 6px 28px rgba(92,61,30,.16);
+  --r:16px;--rsm:10px;--fd:'Fraunces',serif;--fb:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+button,a,[role=button]{touch-action:manipulation;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--fb);background:var(--cr);color:var(--ck);min-height:100vh;overflow-x:hidden;}
+
+/* ── LANDING ── */
+#land{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:2rem;position:relative;overflow:hidden;
+}
+.blob{position:absolute;border-radius:50%;pointer-events:none;filter:blur(60px);}
+.b1{width:600px;height:600px;background:rgba(232,67,45,.18);top:-200px;left:-200px;}
+.b2{width:400px;height:400px;background:rgba(82,183,136,.16);bottom:-100px;right:-100px;}
+.b3{width:250px;height:250px;background:rgba(212,146,10,.14);top:40%;right:8%;}
+
+.land-title{
+  font-family:var(--fd);font-size:clamp(4rem,12vw,9rem);
+  font-weight:900;line-height:0.92;letter-spacing:-0.03em;
+  position:relative;z-index:2;margin-bottom:.5rem;
+}
+.w1{color:var(--ct);display:block;transition:transform .25s ease;}
+.w2{color:var(--cm);display:block;transition:transform .25s ease;}
+.w3{color:var(--cg);display:block;transition:transform .25s ease;}
+.w1:hover{transform:rotate(-2deg) scale(1.04);}
+.w2:hover{transform:rotate(1.5deg) scale(1.04);}
+.w3:hover{transform:rotate(-1.5deg) scale(1.04);}
+
+.land-sub{
+  font-size:1.1rem;color:var(--ckl);
+  margin-bottom:2.5rem;position:relative;z-index:2;
+  font-style:italic;font-family:var(--fd);
+}
+.land-byline{
+  font-family:var(--fb);font-size:.8rem;
+  color:var(--ckl);letter-spacing:.12em;
+  text-transform:uppercase;
+  opacity:.55;
+  margin-bottom:.9rem;
+  position:relative;z-index:2;
+}
+.plate-wrap{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:.9rem;
+  cursor:pointer;
+}
+.plate-wrap:hover .psvg{transform:scale(1.09) rotate(-4deg);}
+.psvg{transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.plate-label{
+  font-family:var(--fd);font-size:1.3rem;font-weight:700;
+  color:var(--ct);letter-spacing:0.01em;
+}
+
+/* ── APP ── */
+#app{display:none;min-height:100vh;}
+
+/* NAV */
+.nav{
+  background:var(--cw);border-bottom:1.5px solid var(--cp);
+  height:58px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;position:sticky;top:0;z-index:100;
+}
+.nav-brand{
+  font-family:var(--fd);font-size:1.25rem;font-weight:900;
+  color:var(--ct);cursor:pointer;letter-spacing:-0.01em;
+}
+.nav-tabs{display:flex;gap:3px;}
+.nt{
+  padding:.38rem .85rem;border-radius:20px;border:none;
+  background:transparent;font-family:var(--fb);font-size:.82rem;
+  font-weight:500;color:var(--ckl);cursor:pointer;transition:all .18s;
+}
+.nt:hover{background:var(--cs);color:var(--ck);}
+.nt.on{background:var(--ct);color:#fff;}
+
+.wrap{max-width:1080px;margin:0 auto;padding:1.75rem 1.25rem;-webkit-overflow-scrolling:touch;}
+.sec{display:none;}.sec.on{display:block;}
+
+/* TYPOGRAPHY */
+.ph{font-family:var(--fd);font-size:1.9rem;font-weight:700;color:var(--ck);margin-bottom:.25rem;}
+.ps{font-size:.88rem;color:var(--ckl);margin-bottom:1.25rem;}
+.sec-lbl{
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--ckl);margin:1.4rem 0 .65rem;
+  padding-bottom:.4rem;border-bottom:1.5px solid var(--cs);
+}
+
+/* CARDS */
+.card{background:var(--cw);border-radius:var(--r);box-shadow:var(--sh);padding:1.2rem 1.4rem;}
+
+/* INPUTS */
+input[type=text],input[type=number],textarea{
+  padding:.6rem 1rem;border:1.5px solid var(--cp);
+  border-radius:30px;font-family:var(--fb);font-size:.9rem;
+  background:var(--cw);color:var(--ck);outline:none;width:100%;
+  -webkit-appearance:none;appearance:none;
+}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:var(--ct);}
+textarea{border-radius:12px;resize:vertical;}
+
+/* BUTTONS */
+.btn{
+  padding:.6rem 1.35rem;border-radius:30px;border:1.5px solid var(--cp);
+  background:var(--cw);font-family:var(--fb);font-size:.87rem;
+  font-weight:600;cursor:pointer;color:var(--ck);transition:all .18s;
+  -webkit-appearance:none;appearance:none;
+}
+.btn:hover{background:var(--cs);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-r{background:var(--ct);color:#fff;border-color:var(--ct);}
+.btn-r:hover{background:var(--ctd);}
+.btn-g{background:var(--cg);color:#fff;border-color:var(--cg);}
+.btn-g:hover{background:#245a41;}
+.btn-sm{padding:.32rem .8rem;font-size:.78rem;}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;min-height:6px;}
+.chip{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--cb);border-radius:20px;
+  padding:.3rem .75rem;font-size:.83rem;font-weight:500;
+  border:1.5px solid transparent;transition:border-color .15s;
+}
+.chip:hover{border-color:var(--cm);}
+.chipx{background:none;border:none;cursor:pointer;color:var(--ckl);font-size:.95rem;padding:0;line-height:1;}
+.chipx:hover{color:var(--ct);}
+.row{display:flex;gap:.5rem;margin-bottom:.9rem;}
+.row input{flex:1;}
+
+/* FRIDGE PHOTO */
+.upload-zone{
+  border:2.5px dashed var(--cp);border-radius:var(--r);
+  padding:2rem;text-align:center;background:var(--cw);
+  cursor:pointer;transition:all .2s;margin-bottom:1.1rem;
+}
+.upload-zone:hover{border-color:var(--ct);background:#fff8f5;}
+.fridge-preview{width:100%;max-height:180px;object-fit:cover;border-radius:var(--r);margin-bottom:.9rem;display:none;}
+#scan-msg{display:none;text-align:center;padding:.6rem;font-size:.85rem;color:var(--ckl);}
+
+/* PREFS */
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;}
+@media(max-width:580px){.pg{grid-template-columns:1fr;}}
+.pval{font-family:var(--fd);font-size:1.9rem;font-weight:700;color:var(--ct);margin-bottom:.3rem;}
+input[type=range]{width:100%;accent-color:var(--ct);margin-top:.3rem;}
+.sk-row{display:flex;gap:.4rem;flex-wrap:wrap;}
+.sk{
+  padding:.38rem .9rem;border-radius:20px;
+  border:1.5px solid var(--cp);background:var(--cw);
+  font-size:.82rem;cursor:pointer;color:var(--ckl);
+  font-family:var(--fb);transition:all .15s;
+}
+.sk.on{background:var(--cg);color:#fff;border-color:var(--cg);}
+.diet-row{display:flex;flex-wrap:wrap;gap:.4rem;}
+.dl{
+  display:flex;align-items:center;gap:.35rem;
+  background:var(--cs);border:1.5px solid transparent;
+  border-radius:20px;padding:.38rem .85rem;
+  font-size:.82rem;cursor:pointer;transition:all .15s;
+}
+.dl.on{background:#fff0ec;border-color:var(--cp);}
+
+/* RECIPE GRID */
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.9rem;}
+.rc{
+  background:var(--cw);border-radius:var(--r);
+  box-shadow:var(--sh);overflow:hidden;cursor:pointer;
+  border:1.5px solid transparent;transition:all .2s;
+  position:relative;
+}
+.rc:hover{box-shadow:var(--shl);transform:translateY(-2px);}
+.rc-em{font-size:3rem;background:var(--cs);padding:1.1rem;text-align:center;display:block;}
+.pct-badge{
+  position:absolute;top:.6rem;right:.6rem;
+  background:var(--cg);color:#fff;
+  font-size:.68rem;font-weight:700;
+  padding:.18rem .5rem;border-radius:8px;
+}
+.rc-bd{padding:.85rem .95rem .95rem;}
+.rc-title{font-family:var(--fd);font-size:1rem;font-weight:700;color:var(--ck);margin-bottom:.2rem;line-height:1.2;}
+.rc-meta{font-size:.72rem;color:var(--ckl);margin-bottom:.4rem;}
+.match-bar{height:4px;background:var(--cs);border-radius:2px;overflow:hidden;margin-bottom:.5rem;}
+.match-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cgl),var(--cm));}
+.tag{font-size:.67rem;padding:.15rem .5rem;border-radius:7px;display:inline-block;margin:1px;}
+.td{background:#e8f5ee;color:var(--cg);}
+.tu{background:#fff0ec;color:var(--ct);}
+.ta{background:#eeedfe;color:#534ab7;}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:.9rem;flex-wrap:wrap;margin-bottom:1.1rem;
+}
+.toolbar input{flex:1;min-width:160px;max-width:220px;}
+
+/* AI BANNER */
+.ai-banner{
+  background:var(--cw);border:1.5px solid var(--cp);border-radius:var(--r);
+  padding:1.1rem 1.3rem;margin-bottom:1.1rem;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:.9rem;flex-wrap:wrap;box-shadow:var(--sh);
+}
+.ai-banner h3{font-family:var(--fd);font-size:1rem;font-weight:700;margin-bottom:.2rem;}
+.ai-banner p{font-size:.8rem;color:var(--ckl);}
+.ai-result{
+  border:2px solid var(--ct);border-radius:var(--r);
+  overflow:hidden;margin-bottom:1.1rem;display:none;
+  background:var(--cw);
+}
+.ai-hdr{
+  background:var(--ct);color:#fff;padding:.55rem 1.2rem;
+  font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  display:flex;justify-content:space-between;
+}
+.ai-bd{padding:1.1rem 1.3rem;}
+.ai-title{font-family:var(--fd);font-size:1.4rem;font-weight:700;margin-bottom:.3rem;}
+.ai-desc{font-size:.87rem;color:var(--ckl);line-height:1.55;margin-bottom:.9rem;}
+.tip-box{
+  background:var(--cb);border-radius:10px;
+  padding:.7rem 1rem;margin-top:.9rem;font-size:.82rem;
+}
+
+/* MODAL overlay — uses normal flow, no position:fixed */
+.modal-bg{
+  background:rgba(92,61,30,.45);border-radius:var(--r);
+  padding:10px;margin-top:.75rem;display:none;
+}
+.modal-bg.on{display:block;}
+.modal-box{
+  background:var(--cw);border-radius:var(--r);
+  max-width:640px;margin:0 auto;overflow:hidden;
+  box-shadow:0 12px 48px rgba(92,61,30,.22);
+}
+.m-hero{font-size:3.5rem;background:var(--cs);padding:1.4rem;text-align:center;}
+.m-body{padding:1.4rem 1.5rem 1.6rem;}
+.m-title{font-family:var(--fd);font-size:1.65rem;font-weight:700;margin-bottom:.4rem;}
+.m-meta{font-size:.8rem;color:var(--ckl);display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem;}
+.ing-li{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.42rem 0;border-bottom:1px solid var(--cs);
+  font-size:.86rem;gap:.5rem;
+}
+.have{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:7px;background:#e8f5ee;color:var(--cg);flex-shrink:0;}
+.need{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:7px;background:#fff3cd;color:#8b6343;flex-shrink:0;}
+.step-li{display:flex;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--cs);font-size:.86rem;line-height:1.55;}
+.step-n{
+  min-width:23px;height:23px;border-radius:50%;
+  background:var(--ct);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.m-acts{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1.2rem;padding-top:.9rem;border-top:1px solid var(--cs);}
+
+/* POST FORM */
+.pf-lbl{display:block;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.3rem;}
+.pf-row{margin-bottom:.9rem;}
+.ep-row{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:.4rem;}
+.ep{font-size:1.25rem;cursor:pointer;padding:2px 5px;border-radius:6px;border:2px solid transparent;background:none;}
+.ep:hover,.ep.on{background:var(--cb);border-color:var(--cm);}
+.diet-tags{display:flex;gap:.4rem;flex-wrap:wrap;}
+.dt{
+  font-size:.8rem;padding:.35rem .85rem;border-radius:20px;
+  cursor:pointer;border:1.5px solid var(--cp);
+  background:var(--cw);color:var(--ckl);font-family:var(--fb);
+}
+.dt.on{background:var(--cg);color:#fff;border-color:var(--cg);}
+
+/* SAVED */
+.save-sec{font-family:var(--fd);font-size:1.05rem;font-weight:700;color:var(--ck);margin:1.3rem 0 .6rem;padding-bottom:.35rem;border-bottom:2px solid var(--cp);}
+
+/* MULTIPLAYER */
+.share-code{
+  background:var(--cs);border-radius:10px;
+  padding:.6rem 1.1rem;font-family:monospace;
+  font-size:1.35rem;font-weight:700;letter-spacing:.18em;
+  color:var(--ct);text-align:center;margin:.55rem 0;
+  border:2px dashed var(--cp);
+}
+.fr-chip{display:inline-flex;align-items:center;gap:.3rem;background:var(--cb);border-radius:20px;padding:.25rem .7rem;font-size:.8rem;margin:.18rem;}
+.vc{background:var(--cw);border-radius:var(--r);padding:.85rem 1rem;box-shadow:var(--sh);margin-bottom:.55rem;display:flex;align-items:center;gap:.8rem;}
+.vbar{height:5px;border-radius:3px;background:var(--cs);overflow:hidden;margin-top:.25rem;}
+.vfill{height:100%;background:var(--ct);border-radius:3px;transition:width .4s;}
+
+/* LOADING */
+.l-box{text-align:center;padding:2rem;border:1.5px solid var(--cp);border-radius:var(--r);margin-bottom:1rem;}
+.lspin{width:36px;height:36px;border:3.5px solid var(--cs);border-top-color:var(--ct);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto .8rem;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ct);margin:0 2px;animation:pu 1.2s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:.2s;}.dot:nth-child(3){animation-delay:.4s;}
+@keyframes pu{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.2);}}
+.inl-sp{display:inline-block;width:13px;height:13px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle;margin-right:.3rem;}
+
+/* TOAST */
+.toasts{position:fixed;bottom:1.5rem;right:1.5rem;display:flex;flex-direction:column;gap:.4rem;z-index:999;pointer-events:none;}
+.toast{
+  background:var(--ck);color:#fff;
+  padding:.55rem 1.1rem;border-radius:30px;font-size:.83rem;
+  box-shadow:0 4px 16px rgba(0,0,0,.18);pointer-events:auto;
+  animation:tin .25s ease;
+}
+@keyframes tin{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ING ROW in AI card */
+.ir{display:flex;justify-content:space-between;align-items:center;padding:.38rem 0;border-bottom:1px solid var(--cs);font-size:.84rem;gap:.5rem;}
+
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--cw);border-top:1.5px solid var(--cp);
+  padding:.45rem .5rem calc(.45rem + env(safe-area-inset-bottom));
+  z-index:200;
+}
+.bnav-inner{display:flex;justify-content:space-around;gap:2px;}
+.bnt{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:none;cursor:pointer;padding:.4rem .2rem;
+  color:var(--ckl);font-family:var(--fb);font-size:.6rem;font-weight:500;
+  border-radius:10px;transition:all .15s;min-width:0;
+}
+.bnt .ico{font-size:1.35rem;line-height:1;}
+.bnt.on{color:var(--ct);}
+.bnt.on .ico{transform:scale(1.15);}
+
+/* ── MOBILE (<= 600px) ── */
+@media(max-width:600px){
+  /* hide top nav tabs, show brand only */
+  .nav{height:50px;padding:0 1rem;}
+  .nav-tabs{display:none;}
+  .bottom-nav{display:block;}
+
+  /* give space above bottom nav */
+  #app{padding-bottom:72px;}
+
+  /* landing — smaller plate on tiny screens */
+  .land-title{font-size:clamp(3rem,15vw,5rem);}
+  .land-sub{font-size:.95rem;margin-bottom:2rem;}
+  .land-byline{font-size:.72rem;margin-bottom:.7rem;}
+  .psvg{width:165px;height:165px;}
+
+  /* content padding */
+  .wrap{padding:1.1rem .9rem 1.5rem;}
+
+  /* section headings */
+  .ph{font-size:1.5rem;}
+
+  /* recipe grid: single column on phones */
+  .rg{grid-template-columns:1fr;}
+
+  /* prefs grid: single column */
+  .pg{grid-template-columns:1fr;}
+
+  /* toolbar stacks */
+  .toolbar{flex-direction:column;gap:.6rem;}
+  .toolbar input{max-width:100%;width:100%;}
+
+  /* AI banner stacks */
+  .ai-banner{flex-direction:column;align-items:stretch;gap:.65rem;}
+  .ai-banner button{width:100%;}
+
+  /* post form: time+skill grid collapses */
+  .post-two-col{grid-template-columns:1fr!important;}
+
+  /* recipe cards: horizontal layout on mobile so more info visible */
+  .rc{display:flex;flex-direction:row;}
+  .rc-em{font-size:2.2rem;padding:.9rem .75rem;min-width:72px;display:flex;align-items:center;justify-content:center;}
+  .pct-badge{top:.5rem;right:.5rem;font-size:.62rem;}
+  .rc-bd{padding:.7rem .8rem .8rem;flex:1;}
+  .rc-title{font-size:.92rem;}
+
+  /* modal wider on mobile */
+  .modal-box{border-radius:12px;}
+  .m-body{padding:1rem 1.1rem 1.3rem;}
+  .m-title{font-size:1.35rem;}
+
+  /* buttons: bigger tap targets */
+  .btn{padding:.65rem 1.2rem;font-size:.88rem;}
+  .btn-sm{padding:.4rem .85rem;font-size:.78rem;}
+
+  /* toast lower on mobile (above bottom nav) */
+  .toasts{bottom:80px;right:.75rem;left:.75rem;}
+  .toast{text-align:center;}
+
+  /* card padding tighter */
+  .card{padding:.95rem 1rem;}
+
+  /* upload zone smaller */
+  .upload-zone{padding:1.4rem 1rem;}
+
+  /* chips bigger touch targets */
+  .chip{padding:.38rem .85rem;font-size:.85rem;}
+
+  /* ingredient add row */
+  .row input{font-size:.95rem;}
+
+  /* pval larger on mobile for readability */
+  .pval{font-size:1.6rem;}
+
+  /* share code smaller font */
+  .share-code{font-size:1.1rem;letter-spacing:.12em;}
+
+  /* cuisine toggles wrap nicely */
+  .tog{padding:.42rem .8rem;font-size:.8rem;}
+}
+
+/* ── TABLET (601–900px) ── */
+@media(min-width:601px) and (max-width:900px){
+  .nav-tab-text{display:none;}
+  .nt{padding:.38rem .7rem;font-size:.95rem;}
+  .rg{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
+  .pg{grid-template-columns:1fr 1fr;}
+  .wrap{padding:1.4rem 1rem;}
+}
+
+/* ── DESKTOP (>900px) ── */
+@media(min-width:901px){
+  .rg{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+  .pg{grid-template-columns:1fr 1fr;}
+  .toolbar input{max-width:220px;}
+}
+
+
+/* CUISINE & SPICE TOGGLES */
+.tog{padding:.38rem .92rem;border-radius:20px;border:1.5px solid var(--cp);background:var(--cw);font-size:.82rem;cursor:pointer;color:var(--ckl);font-family:var(--fb);transition:all .18s;white-space:nowrap;}
+.tog:hover{border-color:var(--cm);color:var(--ck);}
+.tog.on{background:var(--cm);color:#fff;border-color:var(--cm);}
+.tog.spicy-on{background:#C23520;color:#fff;border-color:#C23520;}
+.tog.mild-on{background:var(--cgl);color:#fff;border-color:var(--cgl);}
+.tog-row{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.4rem;}
+.tog-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.42rem;display:block;}
+.af-chip{display:inline-flex;align-items:center;gap:.28rem;border-radius:20px;padding:.18rem .62rem;font-size:.74rem;font-weight:500;color:#fff;margin:.15rem;}
+.af-chip.cuisine{background:var(--cm);}
+.af-chip.spicy-chip{background:#C23520;}
+.af-chip.mild-chip{background:var(--cgl);}
+.af-x{background:none;border:none;color:#fff;cursor:pointer;font-size:.82rem;padding:0;line-height:1;opacity:.75;}
+.af-x:hover{opacity:1;}
+.active-f{display:flex;flex-wrap:wrap;margin-bottom:.65rem;min-height:4px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LANDING ═══ -->
+<div id="land">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <h1 class="land-title">
+    <span class="w1">What</span>
+    <span class="w2">for</span>
+    <span class="w3">Lunch?</span>
+  </h1>
+  <p class="land-byline">by Charles Deng</p>
+  <p class="land-sub">Open your fridge. We'll handle the rest.</p>
+
+  <div class="plate-wrap" onclick="startApp()" tabindex="0" role="button" aria-label="Start cooking">
+    <svg class="psvg" width="210" height="210" viewBox="0 0 210 210" xmlns="http://www.w3.org/2000/svg">
+      <!-- plate rim -->
+      <ellipse cx="105" cy="118" rx="93" ry="81" fill="#F0EAE0"/>
+      <ellipse cx="105" cy="118" rx="93" ry="81" fill="none" stroke="#D4C4A8" stroke-width="3"/>
+      <!-- plate inner -->
+      <ellipse cx="105" cy="118" rx="74" ry="64" fill="#FFFAF4"/>
+      <ellipse cx="105" cy="118" rx="74" ry="64" fill="none" stroke="#E8D5B0" stroke-width="1.8"/>
+      <!-- fork -->
+      <g transform="translate(30,52)">
+        <line x1="13" y1="0" x2="13" y2="82" stroke="#C4A882" stroke-width="4" stroke-linecap="round"/>
+        <line x1="8" y1="0" x2="8" y2="24" stroke="#C4A882" stroke-width="2.8" stroke-linecap="round"/>
+        <line x1="18" y1="0" x2="18" y2="24" stroke="#C4A882" stroke-width="2.8" stroke-linecap="round"/>
+        <path d="M8,22 Q13,30 18,22" fill="#C4A882"/>
+      </g>
+      <!-- knife -->
+      <g transform="translate(158,52)">
+        <line x1="11" y1="0" x2="11" y2="82" stroke="#C4A882" stroke-width="4" stroke-linecap="round"/>
+        <path d="M11,0 Q24,11 17,29 L11,29 Z" fill="#C4A882"/>
+      </g>
+      <!-- pasta base -->
+      <ellipse cx="105" cy="124" rx="44" ry="32" fill="#F9E4A0" opacity=".85"/>
+      <!-- meatballs -->
+      <circle cx="91" cy="116" r="12" fill="#C23520"/>
+      <circle cx="91" cy="116" r="12" fill="none" stroke="#9E1C10" stroke-width="1.5"/>
+      <circle cx="117" cy="121" r="11" fill="#C23520"/>
+      <circle cx="117" cy="121" r="11" fill="none" stroke="#9E1C10" stroke-width="1.5"/>
+      <!-- basil -->
+      <ellipse cx="103" cy="106" rx="9" ry="5.5" fill="#2D6A4F" transform="rotate(-22,103,106)"/>
+      <ellipse cx="111" cy="103" rx="8" ry="4.5" fill="#52B788" transform="rotate(16,111,103)"/>
+      <!-- steam -->
+      <path d="M84,72 Q81,65 84,58 Q87,51 84,44" fill="none" stroke="#D4C4A8" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+      <path d="M105,68 Q102,61 105,54 Q108,47 105,40" fill="none" stroke="#D4C4A8" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+      <path d="M126,72 Q123,65 126,58 Q129,51 126,44" fill="none" stroke="#D4C4A8" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+      <!-- subtle "start" text engraved on the plate rim, blends with the crockery -->
+      <text x="105" y="186" text-anchor="middle" font-family="Georgia, serif" font-size="9" font-style="italic" letter-spacing="3" fill="#C4A882" opacity="0.75">tap to start</text>
+      <!-- tiny play triangle centered on plate, same warm tone as rim -->
+      <polygon points="100,117 100,131 113,124" fill="#D4C4A8" opacity="0.45"/>
+    </svg>
+    <span class="plate-label" style="font-size:1rem;font-weight:400;font-family:var(--fd);font-style:italic;color:var(--ckl);letter-spacing:.02em;opacity:.8;">open your fridge →</span>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <nav class="nav">
+    <div class="nav-brand" onclick="goLand()">🍽 Lunch?</div>
+    <div class="nav-tabs">
+      <button class="nt on" id="nt-fridge" onclick="gt('fridge')">🧊 <span class="nav-tab-text">Fridge</span></button>
+      <button class="nt" id="nt-prefs" onclick="gt('prefs')">⚙️ <span class="nav-tab-text">Prefs</span></button>
+      <button class="nt" id="nt-recipes" onclick="gt('recipes')">🍳 <span class="nav-tab-text">Recipes</span></button>
+      <button class="nt" id="nt-post" onclick="gt('post')">✏️ <span class="nav-tab-text">Post</span></button>
+      <button class="nt" id="nt-saved" onclick="gt('saved')">❤️ <span class="nav-tab-text">Saved</span></button>
+      <button class="nt" id="nt-multi" onclick="gt('multi')">👥 <span class="nav-tab-text">Group</span></button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- FRIDGE -->
+    <div class="sec on" id="sec-fridge">
+      <h2 class="ph">Your Fridge</h2>
+      <p class="ps">Add what you have — we'll rank and build recipes from it.</p>
+      <input type="file" id="photo-in" accept="image/*" style="display:none" onchange="onPhoto(event)">
+      <img class="fridge-preview" id="fridge-img">
+      <div class="upload-zone" onclick="document.getElementById('photo-in').click()">
+        <div style="font-size:2.4rem;margin-bottom:.5rem;">📸</div>
+        <div style="font-size:.95rem;font-weight:600;color:var(--ck);">Upload a fridge photo</div>
+        <div style="font-size:.8rem;color:var(--ckl);margin-top:.2rem;">AI detects ingredients automatically</div>
+        <div style="font-size:.72rem;opacity:.6;margin-top:.4rem;">Click to browse · any format</div>
+      </div>
+      <div id="scan-msg"><span class="inl-sp" style="border-color:rgba(92,61,30,.25);border-top-color:var(--ct);"></span>Scanning with AI…</div>
+      <div class="row">
+        <input type="text" id="ing-in" placeholder="Type an ingredient and press Enter…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')aIng()">
+        <button class="btn btn-r" onclick="aIng()">Add</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div style="display:flex;gap:.55rem;flex-wrap:wrap;">
+        <button class="btn btn-g" onclick="gt('recipes')">Find Recipes →</button>
+        <button class="btn btn-sm" onclick="clrIngs()">Clear all</button>
+      </div>
+    </div>
+
+    <!-- PREFS -->
+    <div class="sec" id="sec-prefs">
+      <h2 class="ph">Preferences</h2>
+      <p class="ps">Filter and scale recipes to match you.</p>
+      <div class="pg">
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.3rem;">Serving size</div>
+          <div class="pval" id="pv-p">2 people</div>
+          <input type="range" min="1" max="12" value="2" id="sl-p" oninput="sP('people',+this.value)">
+        </div>
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.3rem;">Max cook time</div>
+          <div class="pval" id="pv-t">30 min</div>
+          <input type="range" min="10" max="120" step="5" value="30" id="sl-t" oninput="sP('time',+this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--ckl);margin-top:.2rem;"><span>10</span><span>120 min</span></div>
+        </div>
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.55rem;">Skill level</div>
+          <div class="sk-row" id="sk-row">
+            <button class="sk on" onclick="sSk(this,'Beginner')">🌱 Beginner</button>
+            <button class="sk" onclick="sSk(this,'Intermediate')">🔪 Intermediate</button>
+            <button class="sk" onclick="sSk(this,'Advanced')">👨‍🍳 Advanced</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.55rem;">Dietary needs</div>
+          <div class="diet-row" id="diet-row">
+            <span class="dl" onclick="tDiet(this,'vegetarian')">🥦 Vegetarian</span>
+            <span class="dl" onclick="tDiet(this,'vegan')">🌱 Vegan</span>
+            <span class="dl" onclick="tDiet(this,'gluten-free')">🌾 Gluten-free</span>
+            <span class="dl" onclick="tDiet(this,'dairy-free')">🥛 Dairy-free</span>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <span class="tog-lbl">Cuisine</span>
+          <div class="tog-row" id="cuisine-row">
+            <button class="tog" onclick="tCuisine(this,'chinese')">🥢 Chinese</button>
+            <button class="tog" onclick="tCuisine(this,'italian')">🍝 Italian</button>
+            <button class="tog" onclick="tCuisine(this,'american')">🍔 American</button>
+            <button class="tog" onclick="tCuisine(this,'mexican')">🌮 Mexican / Western</button>
+            <button class="tog" onclick="tCuisine(this,'asian')">🍜 Eastern / Asian</button>
+            <button class="tog" onclick="tCuisine(this,'middle-eastern')">🧆 Middle Eastern</button>
+            <button class="tog" onclick="tCuisine(this,'indian')">🫘 Indian</button>
+            <button class="tog" onclick="tCuisine(this,'french')">🥐 French</button>
+            <button class="tog" onclick="tCuisine(this,'british')">🥧 British</button>
+            <button class="tog" onclick="tCuisine(this,'greek')">🥗 Greek</button>
+            <button class="tog" onclick="tCuisine(this,'japanese')">🍱 Japanese</button>
+            <button class="tog" onclick="tCuisine(this,'thai')">🍛 Thai</button>
+            <button class="tog" onclick="tCuisine(this,'spanish')">🍅 Spanish</button>
+            <button class="tog" onclick="tCuisine(this,'turkish')">🥙 Turkish</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <span class="tog-lbl">Spice level</span>
+          <div class="tog-row" id="spice-row">
+            <button class="tog" id="tog-spicy" onclick="tSpice('spicy')">🌶️ Spicy</button>
+            <button class="tog" id="tog-mild" onclick="tSpice('mild')">🌿 Not spicy</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-r" style="margin-top:.9rem;" onclick="gt('recipes')">See matching recipes →</button>
+    </div>
+
+    <!-- RECIPES -->
+    <div class="sec" id="sec-recipes">
+      <div class="toolbar">
+        <div><h2 class="ph">Recipes</h2><p class="ps" style="margin:0;">Ranked by what you already have.</p></div>
+        <input type="text" id="search-in" placeholder="Search…" oninput="rR()" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="ai-banner">
+        <div>
+          <h3>✨ Generate a recipe from my fridge</h3>
+          <p id="ai-sub">AI invents something custom from exactly what you have.</p>
+        </div>
+        <button class="btn btn-r" id="ai-btn" onclick="genAI()">Generate</button>
+      </div>
+      <div class="ai-result" id="ai-result"></div>
+      <!-- modal lives here in normal flow -->
+      <div class="modal-bg" id="modal-bg">
+        <div class="modal-box" id="modal-box"></div>
+        <div style="text-align:center;margin-top:.65rem;">
+          <button class="btn btn-sm" onclick="clModal()">✕ Close</button>
+        </div>
+      </div>
+      <div class="active-f" id="active-filters"></div>
+      <div class="sec-lbl">Recipe library — <span id="rc-count">0</span> recipes</div>
+      <div class="rg" id="rg"></div>
+    </div>
+
+    <!-- POST -->
+    <div class="sec" id="sec-post">
+      <h2 class="ph">Post a Recipe</h2>
+      <p class="ps">Share your own — it joins the ranked library immediately.</p>
+      <div class="card">
+        <div class="pf-row"><label class="pf-lbl">Recipe name</label><input type="text" id="pf-title" placeholder="e.g. Mum's Tomato Pasta" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="pf-row">
+          <label class="pf-lbl">Emoji</label>
+          <div class="ep-row" id="ep-row"></div>
+          <input type="text" id="pf-emoji" style="width:55px;text-align:center;font-size:1.15rem;border-radius:30px;" maxlength="2" placeholder="🍜" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <div class="pf-row"><label class="pf-lbl">One-line description</label><input type="text" id="pf-desc" placeholder="What makes it special?" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="post-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.9rem;">
+          <div><label class="pf-lbl">Cook time (min)</label><input type="number" id="pf-time" min="5" max="300" value="30" style="border-radius:30px;"></div>
+          <div><label class="pf-lbl">Skill</label><div class="sk-row" id="pf-sk-row" style="margin-top:.2rem;"><button class="sk on" onclick="sPFSk(this,'Beginner')">Beginner</button><button class="sk" onclick="sPFSk(this,'Intermediate')">Intermediate</button><button class="sk" onclick="sPFSk(this,'Advanced')">Advanced</button></div></div>
+        </div>
+        <div class="pf-row"><label class="pf-lbl">Dietary tags</label><div class="diet-tags" id="pf-diet"><button class="dt" onclick="tPFDiet(this,'vegetarian')">🥦 Vegetarian</button><button class="dt" onclick="tPFDiet(this,'vegan')">🌱 Vegan</button><button class="dt" onclick="tPFDiet(this,'gluten-free')">🌾 Gluten-free</button><button class="dt" onclick="tPFDiet(this,'dairy-free')">🥛 Dairy-free</button></div></div>
+        <div class="pf-row"><label class="pf-lbl">Ingredients — one per line ("2 cups flour" or "3 eggs")</label><textarea id="pf-ings" rows="4" placeholder="3 eggs&#10;200g pasta&#10;2 cloves garlic&#10;50g parmesan" autocomplete="off" autocorrect="off" spellcheck="false"></textarea></div>
+        <div class="pf-row"><label class="pf-lbl">Steps — one per line</label><textarea id="pf-steps" rows="4" placeholder="Boil pasta in well-salted water until al dente.&#10;Fry garlic gently in olive oil until golden.&#10;Toss pasta with garlic oil and serve with parmesan." autocomplete="off" autocorrect="off" spellcheck="false"></textarea></div>
+        <div style="display:flex;gap:.55rem;"><button class="btn btn-r" onclick="submitRecipe()">Post Recipe</button><button class="btn btn-sm" onclick="clrPF()">Clear</button></div>
+      </div>
+      <div class="sec-lbl">Your posted recipes</div>
+      <div class="rg" id="user-rg"></div>
+    </div>
+
+    <!-- SAVED -->
+    <div class="sec" id="sec-saved">
+      <h2 class="ph">Saved</h2>
+      <p class="ps">Recipes you've saved, liked, or cooked.</p>
+      <div id="saved-content"></div>
+    </div>
+
+    <!-- MULTI -->
+    <div class="sec" id="sec-multi">
+      <h2 class="ph">Group Mode</h2>
+      <p class="ps">Combine fridges with friends and vote on what to cook.</p>
+      <div id="lobby">
+        <div class="card">
+          <div style="font-size:.95rem;font-weight:600;margin-bottom:.8rem;">Start or join a session</div>
+          <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:.8rem;">
+            <button class="btn btn-r" onclick="crSesh()">Create session</button>
+            <div style="display:flex;gap:.4rem;align-items:center;">
+              <input type="text" id="join-in" maxlength="6" placeholder="Enter code" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="width:130px;">
+              <button class="btn" onclick="joSesh()">Join</button>
+            </div>
+          </div>
+          <p style="font-size:.8rem;color:var(--ckl);">Each friend adds their ingredients, then everyone votes together.</p>
+        </div>
+      </div>
+      <div id="sesh" style="display:none;">
+        <div class="card" style="margin-bottom:.9rem;">
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.3rem;">Session code — share this</div>
+          <div class="share-code" id="s-code">——</div>
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ckl);margin-bottom:.4rem;">Friends joined</div>
+          <div id="friends-list" style="margin-bottom:.5rem;"></div>
+          <p id="mp-fridge-note" style="font-size:.78rem;color:var(--ckl);margin-bottom:.4rem;"></p>
+          <p style="font-size:.78rem;color:var(--ckl);margin-bottom:.8rem;">Share the code above. Friends open the app on their own phone, tap <strong>Group</strong>, and enter it to join — everyone's fridge combines automatically.</p>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="btn btn-r" onclick="stVote()">Start voting →</button>
+            <button class="btn btn-sm" onclick="lvSesh()">Leave session</button>
+          </div>
+        </div>
+        <div id="vote-sec" style="display:none;">
+          <div style="font-size:1.05rem;font-family:var(--fd);font-weight:700;margin-bottom:.8rem;">Vote for tonight's dinner</div>
+          <div id="vote-cards"></div>
+          <div id="vote-result" style="display:none;" class="card">
+            <div style="text-align:center;">
+              <div style="font-size:3rem;" id="vr-emoji"></div>
+              <div style="font-family:var(--fd);font-size:1.4rem;font-weight:700;margin:.3rem 0;" id="vr-name"></div>
+              <p style="font-size:.85rem;color:var(--ckl);margin-bottom:.75rem;">The group has decided! 🎉</p>
+              <button class="btn btn-r" onclick="opVoteW()">View Recipe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wrap -->
+</div><!-- /app -->
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ─── RECIPES DATA (44 recipes) ───
+const RECIPES=[
+  {id:'aglio',title:'Spaghetti Aglio e Olio',emoji:'🍝',time:20,skill:'Beginner',dietary:['vegetarian'],tags:['pasta','italian','garlic'],desc:'The simplest, most satisfying pasta. Garlic, oil and heat.',i:[{n:'spaghetti',a:100,u:'g',nt:'per person'},{n:'garlic',a:4,u:'cloves',nt:'thinly sliced'},{n:'olive oil',a:4,u:'tbsp',nt:'extra-virgin'},{n:'chilli flakes',a:0.5,u:'tsp'},{n:'parsley',a:1,u:'handful',nt:'chopped'},{n:'parmesan',a:30,u:'g'}],s:['Boil well-salted water. Cook spaghetti al dente.','Warm oil in a wide pan over medium-low. Add garlic and chilli; cook until golden.','Reserve ½ cup pasta water, drain pasta, toss in pan with a splash of water until glossy.','Fold in parsley. Serve with parmesan.']},
+  {id:'stirfry',title:'Quick Veggie Stir Fry',emoji:'🥢',time:15,skill:'Beginner',dietary:['vegetarian','vegan','dairy-free'],tags:['asian','fast','vegetables'],desc:'Colourful veg in a savory-sweet sauce. On the table in 15.',i:[{n:'broccoli',a:200,u:'g',nt:'florets'},{n:'bell pepper',a:1,u:'',nt:'sliced'},{n:'carrot',a:1,u:'',nt:'julienned'},{n:'garlic',a:3,u:'cloves'},{n:'soy sauce',a:3,u:'tbsp'},{n:'sesame oil',a:1,u:'tbsp'},{n:'vegetable oil',a:2,u:'tbsp'},{n:'rice',a:150,u:'g',nt:'to serve'}],s:['Cook rice per packet.','Heat wok until smoking. Add oil and veg; stir-fry 4 min.','Add garlic 1 more min.','Toss with soy and sesame oil. Serve over rice.']},
+  {id:'scrambled',title:'Silky Scrambled Eggs',emoji:'🍳',time:10,skill:'Beginner',dietary:['vegetarian','gluten-free'],tags:['eggs','breakfast','quick'],desc:'Slow-cooked until barely set — the most underrated technique.',i:[{n:'eggs',a:3,u:''},{n:'butter',a:1,u:'tbsp',nt:'cold, cubed'},{n:'crème fraîche',a:1,u:'tbsp'},{n:'salt',a:1,u:'pinch'},{n:'chives',a:1,u:'tbsp',nt:'optional'},{n:'sourdough',a:2,u:'slices',nt:'toasted'}],s:['Crack eggs into a cold non-stick pan. Add butter.','Place over medium-low. Stir continuously as butter melts.','Keep stirring 3–4 min until barely set.','Off heat, stir in crème fraîche. Season. Serve on toast.']},
+  {id:'curry',title:'Easy Chicken Curry',emoji:'🍛',time:40,skill:'Intermediate',dietary:['gluten-free','dairy-free'],tags:['curry','chicken','indian'],desc:'Fragrant, warmly spiced — tastes like it took all day.',i:[{n:'chicken thighs',a:500,u:'g',nt:'boneless, cubed'},{n:'onion',a:1,u:'large'},{n:'garlic',a:4,u:'cloves'},{n:'ginger',a:2,u:'tsp',nt:'grated'},{n:'tinned tomatoes',a:400,u:'g'},{n:'coconut milk',a:200,u:'ml'},{n:'curry powder',a:2,u:'tbsp'},{n:'garam masala',a:1,u:'tsp'},{n:'oil',a:2,u:'tbsp'},{n:'rice',a:150,u:'g',nt:'basmati'}],s:['Fry onion 8 min until golden. Add garlic, ginger and spices; cook 1 min.','Add chicken; brown 5 min.','Pour in tomatoes and coconut milk. Simmer 20 min.','Serve over basmati rice.']},
+  {id:'dahl',title:'Red Lentil Dahl',emoji:'🫘',time:35,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['lentils','indian','healthy'],desc:'One-pot wonder. Cosy, nourishing and freezes beautifully.',i:[{n:'red lentils',a:200,u:'g',nt:'rinsed'},{n:'onion',a:1,u:'large'},{n:'garlic',a:3,u:'cloves'},{n:'ginger',a:2,u:'tsp'},{n:'tinned tomatoes',a:400,u:'g'},{n:'coconut milk',a:200,u:'ml'},{n:'vegetable stock',a:400,u:'ml'},{n:'cumin',a:1.5,u:'tsp'},{n:'turmeric',a:1,u:'tsp'},{n:'spinach',a:100,u:'g'}],s:['Fry onion 7 min. Add garlic, ginger and spices 1 min.','Add lentils, tomatoes, coconut milk and stock. Simmer 25 min.','Stir in spinach. Season. Serve with naan.']},
+  {id:'shakshuka',title:'Shakshuka',emoji:'🫙',time:30,skill:'Beginner',dietary:['vegetarian','gluten-free','dairy-free'],tags:['eggs','brunch','tomato'],desc:'Eggs poached in spiced tomato sauce. Perfect any time.',i:[{n:'eggs',a:4,u:''},{n:'tinned tomatoes',a:400,u:'g'},{n:'onion',a:1,u:''},{n:'garlic',a:3,u:'cloves'},{n:'bell pepper',a:1,u:''},{n:'cumin',a:1,u:'tsp'},{n:'smoked paprika',a:1.5,u:'tsp'},{n:'feta',a:60,u:'g',nt:'optional'},{n:'parsley',a:1,u:'handful'}],s:['Fry onion and pepper 8 min. Add garlic and spices 1 min.','Pour in tomatoes. Simmer 10 min until thick.','Make 4 wells; crack an egg into each. Cover 5–7 min.','Top with feta and parsley. Serve with bread.']},
+  {id:'risotto',title:'Mushroom Risotto',emoji:'🍄',time:40,skill:'Intermediate',dietary:['vegetarian','gluten-free'],tags:['italian','rice','comforting'],desc:'Silky, glossy — worth every stir.',i:[{n:'arborio rice',a:150,u:'g'},{n:'mushrooms',a:300,u:'g',nt:'mixed, sliced'},{n:'onion',a:1,u:'',nt:'finely diced'},{n:'garlic',a:3,u:'cloves'},{n:'white wine',a:150,u:'ml',nt:'dry'},{n:'vegetable stock',a:900,u:'ml',nt:'hot'},{n:'parmesan',a:50,u:'g'},{n:'butter',a:2,u:'tbsp'},{n:'thyme',a:4,u:'sprigs'}],s:['Sauté mushrooms in butter until golden. Set aside.','Soften onion and garlic. Add rice, toast 2 min. Add wine; stir until absorbed.','Add hot stock one ladle at a time, stirring constantly (~20 min).','Stir in mushrooms, parmesan and remaining butter. Season.']},
+  {id:'avocado',title:'Smashed Avocado Toast',emoji:'🥑',time:10,skill:'Beginner',dietary:['vegetarian','vegan','dairy-free'],tags:['avocado','brunch','toast'],desc:'The classic, done right.',i:[{n:'avocado',a:1,u:'ripe'},{n:'sourdough',a:2,u:'slices',nt:'toasted'},{n:'lemon',a:0.5,u:'',nt:'juiced'},{n:'chilli flakes',a:1,u:'pinch'},{n:'sea salt',a:1,u:'pinch',nt:'flaky'}],s:['Toast sourdough until golden.','Mash avocado with lemon and salt — keep some texture.','Spread on toast. Top with chilli flakes.']},
+  {id:'tuna-pasta',title:'Tuna & Tomato Pasta',emoji:'🐟',time:20,skill:'Beginner',dietary:['dairy-free'],tags:['pasta','quick','pantry'],desc:'Pantry hero. Fast, filling and surprisingly good.',i:[{n:'pasta',a:100,u:'g',nt:'penne or fusilli'},{n:'tuna',a:145,u:'g',nt:'1 tin, drained'},{n:'tinned tomatoes',a:400,u:'g'},{n:'garlic',a:3,u:'cloves'},{n:'olive oil',a:2,u:'tbsp'},{n:'capers',a:1,u:'tbsp',nt:'optional'},{n:'basil',a:1,u:'handful'}],s:['Cook pasta in salted water.','Warm oil; add garlic and chilli 1 min. Add tomatoes and capers; simmer 10 min.','Flake in tuna. Drain pasta, toss in sauce. Finish with basil.']},
+  {id:'fried-rice',title:'Egg Fried Rice',emoji:'🍚',time:15,skill:'Beginner',dietary:['vegetarian','dairy-free'],tags:['rice','asian','eggs'],desc:'Best with day-old rice. The ultimate use-up dish.',i:[{n:'cooked rice',a:300,u:'g',nt:'day-old is best'},{n:'eggs',a:3,u:''},{n:'spring onions',a:4,u:''},{n:'garlic',a:2,u:'cloves'},{n:'soy sauce',a:3,u:'tbsp'},{n:'sesame oil',a:1,u:'tbsp'},{n:'frozen peas',a:80,u:'g',nt:'optional'}],s:['Heat wok until smoking. Add oil, garlic 30s.','Scramble eggs in centre until just set.','Add rice, break lumps, stir-fry 2–3 min.','Toss with soy, sesame oil, peas and spring onions.']},
+  {id:'quesadilla',title:'Cheese Quesadillas',emoji:'🫓',time:15,skill:'Beginner',dietary:['vegetarian'],tags:['mexican','quick','cheese'],desc:'Crispy, gooey, on the table in 15 minutes.',i:[{n:'flour tortillas',a:4,u:'large'},{n:'cheddar',a:150,u:'g',nt:'grated'},{n:'black beans',a:200,u:'g',nt:'1 tin, drained'},{n:'corn',a:100,u:'g'},{n:'spring onions',a:3,u:''},{n:'sour cream',a:1,u:'pot',nt:'to serve'}],s:['Mix beans, corn and spring onions.','Lay one tortilla in a dry hot pan. Scatter cheese and filling on half.','Fold over; press down. Cook 2 min per side until golden.','Slice into wedges. Serve with sour cream.']},
+  {id:'pesto-pasta',title:'Pesto Pasta with Peas',emoji:'🌿',time:15,skill:'Beginner',dietary:['vegetarian'],tags:['pasta','quick','green'],desc:'Vibrant, herby and endlessly satisfying.',i:[{n:'pasta',a:100,u:'g'},{n:'basil',a:50,u:'g'},{n:'pine nuts',a:30,u:'g'},{n:'parmesan',a:40,u:'g'},{n:'garlic',a:1,u:'clove'},{n:'olive oil',a:5,u:'tbsp'},{n:'frozen peas',a:100,u:'g'},{n:'lemon',a:0.5,u:'',nt:'zested'}],s:['Blend basil, pine nuts, parmesan, garlic and oil until smooth.','Cook pasta; add peas last 2 min.','Drain (keep ¼ cup water), toss with pesto. Finish with lemon zest.']},
+  {id:'tacos',title:'Black Bean Tacos',emoji:'🌮',time:20,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['mexican','beans','fast'],desc:'Smoky, filling and fresh. Ready in 20.',i:[{n:'black beans',a:400,u:'g',nt:'1 tin, drained'},{n:'corn tortillas',a:8,u:''},{n:'avocado',a:1,u:''},{n:'lime',a:2,u:''},{n:'coriander',a:1,u:'handful'},{n:'smoked paprika',a:1,u:'tsp'},{n:'red onion',a:0.5,u:''}],s:['Warm beans with paprika. Season.','Mash avocado with lime and salt.','Warm tortillas dry in a pan 30s each side.','Build tacos: beans, avocado, onion, coriander.']},
+  {id:'frittata',title:'Leftover Frittata',emoji:'🥚',time:25,skill:'Beginner',dietary:['vegetarian','gluten-free'],tags:['eggs','flexible'],desc:'Use any veg you have. Great hot or cold.',i:[{n:'eggs',a:6,u:''},{n:'milk',a:3,u:'tbsp'},{n:'bell pepper',a:1,u:''},{n:'courgette',a:1,u:'small'},{n:'feta',a:80,u:'g'},{n:'olive oil',a:2,u:'tbsp'},{n:'herbs',a:1,u:'handful'}],s:['Preheat grill. Sauté veg in an oven-safe pan 5 min.','Beat eggs with milk; pour over veg.','Cook over medium-low until edges set (~5 min).','Grill 3–4 min until puffed and golden.']},
+  {id:'salmon-noodles',title:'Teriyaki Salmon Noodles',emoji:'🐠',time:25,skill:'Intermediate',dietary:['dairy-free'],tags:['salmon','asian','noodles'],desc:'Sweet-salty glaze, silky noodles, flaky salmon.',i:[{n:'salmon fillets',a:2,u:''},{n:'soba noodles',a:150,u:'g'},{n:'soy sauce',a:3,u:'tbsp'},{n:'honey',a:2,u:'tbsp'},{n:'garlic',a:2,u:'cloves'},{n:'sesame oil',a:1,u:'tbsp'},{n:'spring onions',a:3,u:''},{n:'sesame seeds',a:1,u:'tbsp'}],s:['Mix soy, honey and garlic for glaze.','Pan-fry salmon 3 min each side. Add glaze; cook 2 more min.','Cook noodles; drain and toss with sesame oil.','Serve noodles topped with salmon and sesame seeds.']},
+  {id:'leek-soup',title:'Leek & Potato Soup',emoji:'🥣',time:35,skill:'Beginner',dietary:['vegetarian','gluten-free'],tags:['soup','comforting','leek'],desc:'Creamy and warming. Effortlessly good.',i:[{n:'leeks',a:3,u:'large',nt:'sliced'},{n:'potatoes',a:400,u:'g',nt:'peeled, diced'},{n:'onion',a:1,u:''},{n:'butter',a:2,u:'tbsp'},{n:'vegetable stock',a:900,u:'ml'},{n:'cream',a:100,u:'ml',nt:'optional'},{n:'chives',a:1,u:'handful'}],s:['Melt butter; soften leeks and onion 8 min.','Add potatoes and stock. Simmer 20 min.','Blend until smooth. Stir in cream. Season.','Serve with chives and crusty bread.']},
+  {id:'gnocchi',title:'Pan-Fried Gnocchi',emoji:'🥟',time:20,skill:'Beginner',dietary:['vegetarian'],tags:['italian','quick','potato'],desc:'Crispy outside, fluffy inside — better than boiling.',i:[{n:'gnocchi',a:500,u:'g',nt:'shop-bought'},{n:'butter',a:2,u:'tbsp'},{n:'garlic',a:2,u:'cloves'},{n:'sage',a:8,u:'leaves'},{n:'parmesan',a:40,u:'g'},{n:'lemon',a:0.5,u:''}],s:['Melt butter in a wide pan; lay gnocchi in a single layer. Do not stir.','Cook 3–4 min until golden underneath, then toss and cook 2 more min.','Add garlic and sage last minute. Squeeze lemon.','Serve with parmesan.']},
+  {id:'banana-bread',title:'Banana Bread',emoji:'🍌',time:65,skill:'Beginner',dietary:['vegetarian'],tags:['baking','sweet','banana'],desc:'Moist and deeply banana-y. Great for overripe bananas.',i:[{n:'overripe bananas',a:3,u:''},{n:'butter',a:75,u:'g',nt:'melted'},{n:'sugar',a:100,u:'g'},{n:'eggs',a:2,u:''},{n:'vanilla extract',a:1,u:'tsp'},{n:'plain flour',a:200,u:'g'},{n:'baking soda',a:1,u:'tsp'}],s:['Preheat 175°C. Grease a loaf tin.','Mash bananas. Stir in butter, sugar, eggs and vanilla.','Fold in flour and baking soda — don\'t over-mix.','Bake 55–65 min until a skewer comes out clean.']},
+  {id:'caesar',title:'Caesar Salad',emoji:'🥗',time:20,skill:'Intermediate',dietary:['vegetarian'],tags:['salad','classic','cheese'],desc:'Big croutons, tangy dressing, loads of parmesan.',i:[{n:'romaine lettuce',a:1,u:'head',nt:'torn'},{n:'parmesan',a:60,u:'g'},{n:'sourdough',a:3,u:'slices',nt:'cubed'},{n:'olive oil',a:3,u:'tbsp'},{n:'garlic',a:2,u:'cloves'},{n:'egg yolk',a:1,u:''},{n:'lemon',a:1,u:''},{n:'Dijon mustard',a:1,u:'tsp'}],s:['Toss bread cubes with oil; bake 190°C 12 min.','Whisk garlic, egg yolk, lemon, mustard, remaining oil and half parmesan.','Toss lettuce with dressing, croutons and remaining parmesan.']},
+  {id:'omelette',title:'French Omelette',emoji:'🥐',time:8,skill:'Intermediate',dietary:['vegetarian','gluten-free'],tags:['eggs','french','quick'],desc:'Thin, silky and rolled. A test of technique worth mastering.',i:[{n:'eggs',a:3,u:''},{n:'butter',a:15,u:'g'},{n:'chives',a:1,u:'tbsp'},{n:'gruyère',a:20,u:'g',nt:'optional'}],s:['Beat eggs with a pinch of salt.','Heat butter until foaming. Pour in eggs; stir fast with a spatula.','When mostly set, tilt pan and roll onto plate.','Scatter chives. Serve immediately.']},
+  {id:'tomato-soup',title:'Roasted Tomato Soup',emoji:'🍅',time:45,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['soup','tomato','roasted'],desc:'Deep, sweet roasted flavour. Perfect with crusty bread.',i:[{n:'tomatoes',a:800,u:'g',nt:'ripe, halved'},{n:'onion',a:1,u:'large'},{n:'garlic',a:5,u:'cloves',nt:'unpeeled'},{n:'olive oil',a:3,u:'tbsp'},{n:'vegetable stock',a:500,u:'ml'},{n:'basil',a:1,u:'handful'}],s:['Preheat oven 200°C. Roast tomatoes, onion and garlic with oil 30 min.','Squeeze garlic from skins into blender with tomatoes and tray juices.','Add stock and basil. Blend smooth. Season.']},
+  {id:'pad-thai',title:'Pad Thai',emoji:'🍜',time:25,skill:'Intermediate',dietary:['dairy-free'],tags:['thai','noodles','asian'],desc:'Sweet, sour, nutty noodles with a wok-charred edge.',i:[{n:'rice noodles',a:200,u:'g'},{n:'eggs',a:2,u:''},{n:'spring onions',a:4,u:''},{n:'bean sprouts',a:100,u:'g'},{n:'garlic',a:3,u:'cloves'},{n:'fish sauce',a:2,u:'tbsp'},{n:'soy sauce',a:1,u:'tbsp'},{n:'lime',a:2,u:''},{n:'peanuts',a:40,u:'g',nt:'crushed'},{n:'oil',a:2,u:'tbsp'}],s:['Soak rice noodles in warm water 20 min; drain.','Stir-fry garlic over high heat. Push aside; scramble eggs.','Add noodles, fish sauce, soy. Toss until coated.','Add bean sprouts and spring onions. Serve with lime and peanuts.']},
+  {id:'butter-chicken',title:'Butter Chicken',emoji:'🍗',time:45,skill:'Intermediate',dietary:['gluten-free'],tags:['indian','chicken','curry'],desc:'Velvety, mildly spiced — the curry everyone loves.',i:[{n:'chicken thighs',a:500,u:'g',nt:'cubed'},{n:'butter',a:3,u:'tbsp'},{n:'onion',a:1,u:''},{n:'garlic',a:4,u:'cloves'},{n:'ginger',a:2,u:'tsp'},{n:'tinned tomatoes',a:400,u:'g'},{n:'double cream',a:150,u:'ml'},{n:'garam masala',a:1.5,u:'tsp'},{n:'cumin',a:1,u:'tsp'},{n:'coriander powder',a:1,u:'tsp'}],s:['Fry onion in butter 8 min. Add garlic, ginger and spices 1 min.','Add chicken; brown 5 min. Pour in tomatoes; simmer 15 min.','Blend sauce smooth (optional). Stir in cream; simmer 5 min.','Serve with rice and naan.']},
+  {id:'carbonara',title:'Spaghetti Carbonara',emoji:'🥓',time:20,skill:'Intermediate',dietary:['dairy-free'],tags:['pasta','italian','eggs'],desc:'Silky egg sauce, crispy pancetta, no cream — ever.',i:[{n:'spaghetti',a:100,u:'g'},{n:'pancetta',a:100,u:'g',nt:'or bacon'},{n:'eggs',a:3,u:''},{n:'egg yolks',a:2,u:''},{n:'pecorino',a:60,u:'g',nt:'or parmesan'},{n:'black pepper',a:1,u:'tsp',nt:'freshly cracked'}],s:['Cook spaghetti in salted water. Reserve 1 cup pasta water.','Fry pancetta until crispy. Remove pan from heat.','Whisk eggs, yolks and cheese with lots of pepper.','Drain pasta; off the heat, toss with pancetta. Pour in egg mix and splash of water; toss until glossy.']},
+  {id:'greek-salad',title:'Greek Salad',emoji:'🥗',time:10,skill:'Beginner',dietary:['vegetarian','gluten-free'],tags:['salad','greek','fresh'],desc:'No lettuce needed. Crisp veg, salty feta, great olive oil.',i:[{n:'tomatoes',a:4,u:'large',nt:'chunks'},{n:'cucumber',a:1,u:'',nt:'chunks'},{n:'red onion',a:0.5,u:'',nt:'thinly sliced'},{n:'olives',a:80,u:'g',nt:'kalamata'},{n:'feta',a:150,u:'g',nt:'block'},{n:'olive oil',a:3,u:'tbsp'},{n:'dried oregano',a:1,u:'tsp'}],s:['Combine tomatoes, cucumber, onion and olives in a bowl.','Place feta on top. Drizzle generously with olive oil.','Sprinkle with oregano and season with salt and pepper.']},
+  {id:'minestrone',title:'Minestrone',emoji:'🍲',time:40,skill:'Beginner',dietary:['vegetarian','vegan','dairy-free'],tags:['soup','italian','vegetables'],desc:'Hearty Italian veg soup — a great fridge-clearer.',i:[{n:'onion',a:1,u:''},{n:'carrot',a:2,u:''},{n:'celery',a:2,u:'sticks'},{n:'garlic',a:3,u:'cloves'},{n:'tinned tomatoes',a:400,u:'g'},{n:'vegetable stock',a:1,u:'litre'},{n:'cannellini beans',a:400,u:'g'},{n:'pasta',a:80,u:'g',nt:'small shapes'},{n:'courgette',a:1,u:''}],s:['Soften onion, carrot, celery in oil 8 min. Add garlic 1 min.','Add tomatoes and stock. Simmer 15 min.','Add beans, courgette and pasta. Cook 10 min until pasta is tender.','Season. Serve with crusty bread and grated parmesan.']},
+  {id:'falafel',title:'Falafel with Tahini',emoji:'🧆',time:30,skill:'Intermediate',dietary:['vegetarian','vegan','dairy-free'],tags:['middle-eastern','chickpea','healthy'],desc:'Crispy outside, fluffy inside. Serve in wraps or over salad.',i:[{n:'chickpeas',a:400,u:'g',nt:'1 tin, drained and dried'},{n:'garlic',a:3,u:'cloves'},{n:'cumin',a:1.5,u:'tsp'},{n:'coriander powder',a:1,u:'tsp'},{n:'parsley',a:1,u:'large handful'},{n:'flour',a:3,u:'tbsp'},{n:'oil',a:1,u:'cup',nt:'for frying'},{n:'tahini',a:4,u:'tbsp'},{n:'lemon',a:1,u:''}],s:['Pulse chickpeas, garlic, herbs and spices until coarse. Mix in flour.','Form into golf-ball-sized patties.','Shallow-fry in hot oil 3 min per side until deep golden.','Mix tahini with lemon, garlic and water to a drizzleable sauce.']},
+  {id:'ramen',title:'Quick Miso Ramen',emoji:'🍜',time:20,skill:'Beginner',dietary:['vegetarian'],tags:['japanese','noodles','soup'],desc:'Deeply savoury broth, soft-boiled egg, done fast.',i:[{n:'ramen noodles',a:200,u:'g'},{n:'miso paste',a:3,u:'tbsp',nt:'white or red'},{n:'eggs',a:2,u:''},{n:'spring onions',a:4,u:''},{n:'garlic',a:2,u:'cloves'},{n:'ginger',a:1,u:'tsp'},{n:'soy sauce',a:2,u:'tbsp'},{n:'sesame oil',a:1,u:'tbsp'},{n:'vegetable stock',a:800,u:'ml'}],s:['Boil eggs 6.5 min; transfer to ice water, peel and halve.','Sauté garlic and ginger in sesame oil. Add stock; bring to simmer.','Whisk in miso and soy. Cook noodles per packet.','Serve noodles in broth, topped with egg and spring onions.']},
+  {id:'prawn-linguine',title:'Garlic Prawn Linguine',emoji:'🦐',time:20,skill:'Beginner',dietary:['dairy-free'],tags:['pasta','seafood','italian'],desc:'Prawns, garlic, white wine — done in 20 minutes.',i:[{n:'linguine',a:100,u:'g'},{n:'prawns',a:200,u:'g',nt:'raw, peeled'},{n:'garlic',a:4,u:'cloves',nt:'sliced'},{n:'white wine',a:100,u:'ml'},{n:'olive oil',a:3,u:'tbsp'},{n:'chilli flakes',a:0.5,u:'tsp'},{n:'parsley',a:1,u:'handful'},{n:'lemon',a:0.5,u:''}],s:['Cook linguine in salted water.','Warm oil; add garlic and chilli until golden. Add prawns; cook 2 min.','Pour in wine; reduce 1 min. Add drained pasta and a splash of pasta water.','Toss with parsley and lemon juice.']},
+  {id:'lemon-chicken',title:'Lemon & Herb Chicken',emoji:'🍋',time:35,skill:'Beginner',dietary:['gluten-free','dairy-free'],tags:['chicken','mediterranean','light'],desc:'Bright, zesty and ready in 35 minutes.',i:[{n:'chicken breasts',a:2,u:''},{n:'lemon',a:2,u:'',nt:'zested and juiced'},{n:'garlic',a:3,u:'cloves'},{n:'olive oil',a:3,u:'tbsp'},{n:'thyme',a:1,u:'tbsp'},{n:'rosemary',a:1,u:'tbsp'},{n:'new potatoes',a:400,u:'g',nt:'halved'}],s:['Mix lemon zest and juice, garlic, oil and herbs.','Toss chicken and potatoes in the marinade. Season.','Roast at 200°C for 25–30 min until cooked through.']},
+  {id:'veggie-chilli',title:'Veggie Chilli',emoji:'🌶️',time:40,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['chilli','mexican','beans'],desc:'Hearty, smoky and satisfying. Even better the next day.',i:[{n:'kidney beans',a:400,u:'g'},{n:'black beans',a:400,u:'g'},{n:'tinned tomatoes',a:400,u:'g'},{n:'onion',a:1,u:''},{n:'garlic',a:3,u:'cloves'},{n:'bell pepper',a:2,u:''},{n:'cumin',a:2,u:'tsp'},{n:'smoked paprika',a:2,u:'tsp'},{n:'chilli powder',a:1,u:'tsp'},{n:'vegetable stock',a:200,u:'ml'}],s:['Fry onion and pepper 8 min. Add garlic and spices; cook 1 min.','Add tomatoes, both beans and stock. Stir well.','Simmer 25 min uncovered until thick. Season.','Serve with rice, sour cream and guacamole.']},
+  {id:'french-onion',title:'French Onion Soup',emoji:'🧅',time:60,skill:'Intermediate',dietary:['vegetarian'],tags:['french','soup','cheese'],desc:'Deeply caramelised onions, rich broth, melted gruyère.',i:[{n:'onions',a:1,u:'kg',nt:'thinly sliced'},{n:'butter',a:3,u:'tbsp'},{n:'white wine',a:150,u:'ml'},{n:'beef or veg stock',a:1,u:'litre'},{n:'baguette',a:4,u:'slices'},{n:'gruyère',a:100,u:'g',nt:'grated'},{n:'thyme',a:4,u:'sprigs'}],s:['Cook onions in butter over low heat 40 min, stirring often, until deep golden.','Add wine; reduce 2 min. Add stock and thyme; simmer 15 min. Season.','Ladle into oven-proof bowls. Top with baguette slices and gruyère.','Grill until cheese is bubbling and golden.']},
+  {id:'steak-salad',title:'Steak & Rocket Salad',emoji:'🥩',time:20,skill:'Intermediate',dietary:['gluten-free','dairy-free'],tags:['salad','steak','light'],desc:'Rare steak sliced over peppery rocket. Fast and elegant.',i:[{n:'sirloin steak',a:300,u:'g'},{n:'rocket',a:80,u:'g'},{n:'cherry tomatoes',a:150,u:'g',nt:'halved'},{n:'parmesan',a:30,u:'g',nt:'shaved'},{n:'olive oil',a:3,u:'tbsp'},{n:'balsamic vinegar',a:2,u:'tbsp'},{n:'Dijon mustard',a:1,u:'tsp'}],s:['Season steak. Sear in a hot pan 2–3 min per side. Rest 5 min.','Whisk olive oil, balsamic and mustard for dressing.','Toss rocket and tomatoes with dressing.','Slice steak thinly; lay over salad with parmesan.']},
+  {id:'mac-cheese',title:'Mac & Cheese',emoji:'🧀',time:35,skill:'Intermediate',dietary:['vegetarian'],tags:['american','pasta','cheese'],desc:'The real thing — béchamel, three cheeses, crispy breadcrumbs.',i:[{n:'macaroni',a:250,u:'g'},{n:'butter',a:3,u:'tbsp'},{n:'plain flour',a:3,u:'tbsp'},{n:'milk',a:600,u:'ml'},{n:'cheddar',a:150,u:'g',nt:'grated'},{n:'gruyère',a:80,u:'g'},{n:'Dijon mustard',a:1,u:'tsp'},{n:'breadcrumbs',a:50,u:'g'},{n:'parmesan',a:30,u:'g'}],s:['Cook macaroni until just al dente; drain.','Melt butter, add flour, cook 1 min. Gradually whisk in milk; simmer until thick.','Add cheeses and mustard. Stir in macaroni.','Pour into baking dish. Top with breadcrumbs and parmesan. Bake 200°C 20 min.']},
+  {id:'mujaddara',title:'Mujaddara',emoji:'🧅',time:45,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['middle-eastern','lentils','healthy'],desc:'Spiced lentils and rice topped with crispy caramelised onions.',i:[{n:'green lentils',a:200,u:'g'},{n:'basmati rice',a:150,u:'g'},{n:'onions',a:3,u:'large',nt:'thinly sliced'},{n:'olive oil',a:5,u:'tbsp'},{n:'cumin',a:1.5,u:'tsp'},{n:'coriander',a:1,u:'tsp'},{n:'cinnamon',a:0.5,u:'tsp'}],s:['Fry onions in oil over medium-high 20–25 min until deeply crispy.','Cook lentils 15 min in salted water; drain.','Stir rice and spices into lentils with 300ml water. Simmer covered 15 min.','Top with crispy onions. Serve with yogurt.']},
+  {id:'pancakes',title:'Fluffy Pancakes',emoji:'🥞',time:20,skill:'Beginner',dietary:['vegetarian'],tags:['breakfast','sweet','american'],desc:'Thick, fluffy and golden. Weekend breakfast sorted.',i:[{n:'plain flour',a:200,u:'g'},{n:'baking powder',a:2,u:'tsp'},{n:'sugar',a:2,u:'tbsp'},{n:'eggs',a:2,u:''},{n:'milk',a:250,u:'ml'},{n:'butter',a:2,u:'tbsp',nt:'melted'},{n:'vanilla extract',a:1,u:'tsp'}],s:['Whisk flour, baking powder and sugar. Make a well.','Beat eggs, milk, butter and vanilla; pour into well. Stir until just combined — lumps are fine.','Ladle into a lightly buttered pan over medium heat.','Cook until bubbles form (~2 min), flip, cook 1 more min.']},
+  {id:'beef-stirfry',title:'Beef & Broccoli Stir Fry',emoji:'🥦',time:20,skill:'Intermediate',dietary:['dairy-free'],tags:['asian','beef','quick'],desc:'Tender beef, crisp broccoli, glossy sauce. Better than takeaway.',i:[{n:'beef sirloin',a:300,u:'g',nt:'thinly sliced'},{n:'broccoli',a:250,u:'g',nt:'florets'},{n:'garlic',a:3,u:'cloves'},{n:'ginger',a:1,u:'tsp'},{n:'soy sauce',a:3,u:'tbsp'},{n:'oyster sauce',a:2,u:'tbsp'},{n:'sesame oil',a:1,u:'tbsp'},{n:'cornflour',a:1,u:'tsp'},{n:'oil',a:2,u:'tbsp'}],s:['Toss beef in cornflour. Mix soy, oyster sauce and sesame oil.','Stir-fry broccoli in hot oil 3 min. Remove.','Add beef; cook 2 min over high heat.','Return broccoli, add garlic and ginger 30s. Pour in sauce; toss until glossy.']},
+  {id:'gazpacho',title:'Gazpacho',emoji:'🍅',time:15,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['spanish','soup','cold','summer'],desc:'Ice-cold blitzed salad soup. No cooking required.',i:[{n:'tomatoes',a:800,u:'g',nt:'very ripe'},{n:'cucumber',a:0.5,u:''},{n:'red pepper',a:1,u:''},{n:'garlic',a:1,u:'clove'},{n:'stale bread',a:1,u:'slice',nt:'optional'},{n:'olive oil',a:4,u:'tbsp'},{n:'red wine vinegar',a:2,u:'tbsp'}],s:['Blend all vegetables with garlic, oil and vinegar until smooth.','Season generously with salt.','Refrigerate at least 1 hour until ice-cold.','Serve with a drizzle of olive oil and chopped cucumber.']},
+  {id:'cottage-pie',title:'Cottage Pie',emoji:'🥧',time:75,skill:'Intermediate',dietary:['gluten-free'],tags:['british','beef','comfort'],desc:'Rich mince under fluffy mashed potato. Pure comfort.',i:[{n:'beef mince',a:500,u:'g'},{n:'onion',a:1,u:''},{n:'carrot',a:2,u:''},{n:'peas',a:100,u:'g'},{n:'Worcestershire sauce',a:2,u:'tbsp'},{n:'beef stock',a:300,u:'ml'},{n:'tomato purée',a:1,u:'tbsp'},{n:'potatoes',a:700,u:'g'},{n:'butter',a:3,u:'tbsp'},{n:'milk',a:4,u:'tbsp'}],s:['Fry onion and carrot 5 min. Add mince; brown well.','Stir in tomato purée, Worcestershire and stock. Simmer 20 min.','Boil potatoes; mash with butter and milk. Season.','Spread mince in a dish, top with mash, rough up with a fork. Bake 200°C 25 min.']},
+  {id:'chicken-shawarma',title:'Chicken Shawarma',emoji:'🌯',time:40,skill:'Intermediate',dietary:['gluten-free','dairy-free'],tags:['middle-eastern','chicken','wraps'],desc:'Spiced, charred chicken that fills the flat with amazing aroma.',i:[{n:'chicken thighs',a:600,u:'g'},{n:'garlic',a:4,u:'cloves'},{n:'cumin',a:2,u:'tsp'},{n:'turmeric',a:1,u:'tsp'},{n:'coriander powder',a:1,u:'tsp'},{n:'paprika',a:1,u:'tsp'},{n:'olive oil',a:3,u:'tbsp'},{n:'lemon',a:1,u:''},{n:'flatbreads',a:4,u:'',nt:'to serve'},{n:'tahini',a:3,u:'tbsp',nt:'to serve'}],s:['Mix spices, garlic, oil and lemon. Coat chicken; marinate 30 min.','Grill or roast at 220°C for 25–30 min until charred.','Rest 5 min, slice thinly.','Serve in flatbreads with tahini, pickles and salad.']},
+  {id:'kedgeree',title:'Kedgeree',emoji:'🐟',time:30,skill:'Intermediate',dietary:['gluten-free'],tags:['british','fish','rice'],desc:'Smoky fish, spiced rice and soft eggs. A British classic.',i:[{n:'smoked haddock',a:400,u:'g'},{n:'basmati rice',a:200,u:'g'},{n:'eggs',a:4,u:'',nt:'hard-boiled'},{n:'onion',a:1,u:''},{n:'curry powder',a:2,u:'tsp'},{n:'butter',a:2,u:'tbsp'},{n:'parsley',a:1,u:'handful'},{n:'lemon',a:1,u:''}],s:['Poach haddock in milk 8 min; flake into large pieces.','Cook onion in butter. Add curry powder 1 min. Stir in rice and water to cook it.','Simmer covered 12 min. Fold in fish gently.','Top with halved eggs, parsley and lemon juice.']},
+  {id:'lentil-soup',title:'Turkish Red Lentil Soup',emoji:'🥣',time:30,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['soup','lentils','turkish'],desc:'Silky, smoky and warming — finished with a sizzle of paprika butter.',i:[{n:'red lentils',a:200,u:'g'},{n:'onion',a:1,u:''},{n:'carrot',a:1,u:''},{n:'garlic',a:3,u:'cloves'},{n:'vegetable stock',a:1,u:'litre'},{n:'tomato purée',a:1,u:'tbsp'},{n:'cumin',a:1.5,u:'tsp'},{n:'butter',a:2,u:'tbsp'},{n:'smoked paprika',a:1,u:'tsp'}],s:['Soften onion, carrot and garlic in oil 5 min.','Add lentils, stock, tomato purée and cumin. Simmer 20 min.','Blend until smooth. Season.','Melt butter with paprika; pour sizzling over soup to serve.']},
+  {id:'hummus-bowl',title:'Hummus Power Bowl',emoji:'🫘',time:15,skill:'Beginner',dietary:['vegetarian','vegan','gluten-free','dairy-free'],tags:['healthy','middle-eastern','chickpea'],desc:'Creamy hummus loaded with roasted veg and grains.',i:[{n:'tinned chickpeas',a:400,u:'g'},{n:'tahini',a:4,u:'tbsp'},{n:'lemon',a:1,u:''},{n:'garlic',a:1,u:'clove'},{n:'olive oil',a:4,u:'tbsp'},{n:'mixed roasted veg',a:200,u:'g'},{n:'cooked grains',a:150,u:'g',nt:'quinoa or farro'}],s:['Blend chickpeas, tahini, lemon and garlic until smooth. Season.','Thin with a little water to a silky consistency.','Spread hummus in bowls. Top with grains and roasted veg.','Drizzle with olive oil and sprinkle with paprika.']},
+];
+
+// ─── STATE ───
+const DEF={ingredients:[],prefs:{people:2,time:30,skill:'Beginner',dietary:[],cuisines:[],spice:'any'},liked:[],cooked:[],saved:[],tasteTags:{},userRecipes:[],aiRecipes:[],session:null};
+let S={...DEF};
+try{const d=localStorage.getItem('wfl5');if(d)S={...DEF,...JSON.parse(d)};}catch(e){}
+const save=()=>{try{localStorage.setItem('wfl5',JSON.stringify(S));}catch(e){}};
+// AI recipes are persisted so Saved/Cooked entries survive a page reload.
+const allR=()=>[...(S.aiRecipes||[]),...RECIPES,...(S.userRecipes||[])];
+
+// ─── BACKEND CONFIG ───
+// The app never talks to Anthropic directly — it talks to your Cloudflare Worker,
+// which holds your secret API key, forces the cheap Haiku model, locks requests to
+// this site, and rate-limits abuse. Set this to your deployed Worker base URL.
+// (See SETUP.md, Phase A.) Example: 'https://what-for-lunch.yourname.workers.dev'
+const BACKEND={
+  // ↓↓↓ PASTE your Worker base URL here after deploying (no trailing slash).
+  URL:'',
+  get aiUrl(){return this.URL ? this.URL.replace(/\/$/,'')+'/api/messages' : '';},
+  get sessionUrl(){return this.URL ? this.URL.replace(/\/$/,'')+'/api/session' : '';}
+};
+// AI features (camera + generator) light up once the backend URL is set.
+function aiReady(){return !!BACKEND.URL;}
+// Shared caller — both onPhoto() and genAI() go through the proxy.
+async function anthropicMessages(body){
+  if(!BACKEND.URL)throw new Error('Backend not configured yet');
+  const resp=await fetch(BACKEND.aiUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let data;
+  try{data=await resp.json();}catch(e){throw new Error('Invalid response from server ('+resp.status+')');}
+  if(!resp.ok||data.error){throw new Error((data.error&&data.error.message)||('AI request failed ('+resp.status+')'));}
+  return data;
+}
+
+// ─── CUISINE MAP (cuisine key -> recipe tags that match) ───
+const CUISINE_TAGS={
+  chinese:['asian','chinese'],
+  italian:['italian','pasta'],
+  american:['american','comfort'],
+  mexican:['mexican'],
+  asian:['asian','thai','japanese','noodles','eastern'],
+  'middle-eastern':['middle-eastern','chickpea','falafel','hummus'],
+  indian:['indian','curry'],
+  french:['french'],
+  british:['british'],
+  greek:['greek'],
+  japanese:['japanese'],
+  thai:['thai'],
+  spanish:['spanish'],
+  turkish:['turkish'],
+};
+// Recipes that are spicy
+const SPICY_IDS=['shakshuka','tacos','veggie-chilli','pad-thai','curry','butter-chicken','dahl','carbonara','steak-salad','fried-chicken','beef-stirfry','birria-tacos','chicken-shawarma'];
+function isSpicy(r){return SPICY_IDS.includes(r.id)||(r.tags||[]).some(t=>['spicy','chilli','hot'].includes(t));}
+
+
+function score(r){
+  const m=S.ingredients.map(x=>x.toLowerCase());
+  const h=r.i.filter(x=>m.some(u=>u.includes(x.n.toLowerCase())||x.n.toLowerCase().includes(u))).length;
+  let sc=h/(r.i.length||1);
+  (r.tags||[]).forEach(t=>{sc+=(S.tasteTags[t]||0)*0.05;});
+  if(S.liked.includes(r.id))sc+=0.15;
+  if(S.cooked.includes(r.id))sc+=0.1;
+  return Math.min(1,sc);
+}
+function matchDets(r){
+  const m=S.ingredients.map(x=>x.toLowerCase());
+  return r.i.map(x=>({...x,hv:m.some(u=>u.includes(x.n.toLowerCase())||x.n.toLowerCase().includes(u))}));
+}
+function filtered(){
+  const{time,skill,dietary,cuisines,spice}=S.prefs;
+  const si=['Beginner','Intermediate','Advanced'];
+  return allR().filter(r=>{
+    if(r.time>time) return false;
+    if(si.indexOf(r.skill)>si.indexOf(skill)) return false;
+    if(dietary.length&&!dietary.every(d=>r.dietary.includes(d))) return false;
+    if(cuisines&&cuisines.length){
+      const rtags=r.tags||[];
+      const match=cuisines.some(c=>(CUISINE_TAGS[c]||[]).some(t=>rtags.includes(t)));
+      if(!match) return false;
+    }
+    if(spice==='spicy'&&!isSpicy(r)) return false;
+    if(spice==='mild'&&isSpicy(r)) return false;
+    return true;
+  });
+}
+
+// ─── NAVIGATION ───
+function startApp(){
+  document.getElementById('land').style.display='none';
+  document.getElementById('app').style.display='block';
+  initPrefs();renderFridge();rR();renderSaved();rURg();renderActiveFilters();
+}
+function goLand(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('land').style.display='flex';
+}
+function gt(t){
+  document.querySelectorAll('.nt').forEach(n=>n.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.bnt').forEach(n=>n.classList.remove('on'));
+  document.getElementById('nt-'+t).classList.add('on');
+  document.getElementById('sec-'+t).classList.add('on');
+  const bnt=document.getElementById('bnt-'+t);if(bnt)bnt.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(t==='recipes')rR();
+  if(t==='saved')renderSaved();
+  if(t==='post')rURg();
+}
+
+// ─── FRIDGE ───
+function renderFridge(){
+  document.getElementById('chips').innerHTML=S.ingredients.map(i=>`<div class="chip"><span>${i}</span><button class="chipx" onclick="rmIng('${i.replace(/'/g,"\\'")}')">×</button></div>`).join('');
+}
+function aIng(){
+  const el=document.getElementById('ing-in');
+  const v=el.value.trim();if(!v)return;
+  if(S.ingredients.map(x=>x.toLowerCase()).includes(v.toLowerCase())){el.value='';toast(v+' is already in your fridge');return;}
+  S.ingredients.push(v);save();renderFridge();el.value='';toast('Added: '+v);
+}
+function rmIng(i){S.ingredients=S.ingredients.filter(x=>x!==i);save();renderFridge();}
+function clrIngs(){if(!confirm('Clear all ingredients?'))return;S.ingredients=[];save();renderFridge();document.getElementById('fridge-img').style.display='none';}
+
+async function onPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async(ev)=>{
+    const img=document.getElementById('fridge-img');img.src=ev.target.result;img.style.display='block';
+    const sm=document.getElementById('scan-msg');
+    if(!aiReady()){toast('Add your Anthropic API key to enable photo scanning — type ingredients below for now.');return;}
+    sm.style.display='block';
+    try{
+      const b64=ev.target.result.split(',')[1];
+      const d=await anthropicMessages({max_tokens:300,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},{type:'text',text:'List all food ingredients visible. Reply ONLY with a JSON array of lowercase strings like ["eggs","milk"]. No other text.'}]}]});
+      const raw=(d.content||[]).map(b=>b.text||'').join('');
+      const mx=raw.match(/\[[\s\S]*?\]/);
+      const found=mx?JSON.parse(mx[0]):[];
+      let added=0;
+      found.forEach(x=>{const c=String(x).trim().toLowerCase();if(c&&!S.ingredients.map(y=>y.toLowerCase()).includes(c)){S.ingredients.push(c);added++;}});
+      save();renderFridge();sm.style.display='none';toast(added?('AI added '+added+' ingredient'+(added===1?'':'s')+' ✨'):'No new ingredients spotted');
+    }catch(err){sm.style.display='none';toast('Scan failed — add ingredients manually');}
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── PREFS ───
+function initPrefs(){
+  document.getElementById('sl-p').value=S.prefs.people;
+  document.getElementById('pv-p').textContent=S.prefs.people+' people';
+  document.getElementById('sl-t').value=S.prefs.time;
+  document.getElementById('pv-t').textContent=S.prefs.time+' min';
+  document.querySelectorAll('#sk-row .sk').forEach(b=>{b.classList.toggle('on',b.textContent.includes(S.prefs.skill));});
+  S.prefs.dietary.forEach(d=>{const el=document.querySelector(`#diet-row [onclick*="${d}"]`);if(el)el.classList.add('on');});
+  (S.prefs.cuisines||[]).forEach(c=>{const el=document.querySelector(`#cuisine-row .tog[onclick*="${c}"]`);if(el)el.classList.add('on');});
+  if(S.prefs.spice==='spicy'){document.getElementById('tog-spicy').className='tog spicy-on';}
+  if(S.prefs.spice==='mild'){document.getElementById('tog-mild').className='tog mild-on';}
+  renderActiveFilters();
+}
+function sP(k,v){S.prefs[k]=v;save();if(k==='people')document.getElementById('pv-p').textContent=v+' people';if(k==='time')document.getElementById('pv-t').textContent=v+' min';}
+function sSk(btn,sk){S.prefs.skill=sk;save();document.querySelectorAll('#sk-row .sk').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function tDiet(el,d){const on=el.classList.toggle('on');if(on&&!S.prefs.dietary.includes(d))S.prefs.dietary.push(d);else S.prefs.dietary=S.prefs.dietary.filter(x=>x!==d);save();}
+function tCuisine(btn,c){
+  S.prefs.cuisines=S.prefs.cuisines||[];
+  const on=btn.classList.toggle('on');
+  if(on&&!S.prefs.cuisines.includes(c)) S.prefs.cuisines.push(c);
+  else S.prefs.cuisines=S.prefs.cuisines.filter(x=>x!==c);
+  save();rR();renderActiveFilters();
+}
+function tSpice(sp){
+  const cur=S.prefs.spice||'any';
+  S.prefs.spice=(cur===sp)?'any':sp;
+  save();
+  document.getElementById('tog-spicy').className='tog'+(S.prefs.spice==='spicy'?' spicy-on':'');
+  document.getElementById('tog-mild').className='tog'+(S.prefs.spice==='mild'?' mild-on':'');
+  rR();renderActiveFilters();
+}
+function renderActiveFilters(){
+  const el=document.getElementById('active-filters');if(!el)return;
+  const cuisines=S.prefs.cuisines||[];
+  const spice=S.prefs.spice||'any';
+  let h='';
+  cuisines.forEach(c=>{
+    const label=c.charAt(0).toUpperCase()+c.slice(1).replace('-',' ');
+    h+=`<span class="af-chip cuisine">${label}<button class="af-x" onclick="rmCuisine('${c}')">×</button></span>`;
+  });
+  if(spice==='spicy') h+=`<span class="af-chip spicy-chip">🌶️ Spicy<button class="af-x" onclick="tSpice('spicy')">×</button></span>`;
+  if(spice==='mild') h+=`<span class="af-chip mild-chip">🌿 Not spicy<button class="af-x" onclick="tSpice('mild')">×</button></span>`;
+  el.innerHTML=h;
+}
+function rmCuisine(c){
+  S.prefs.cuisines=(S.prefs.cuisines||[]).filter(x=>x!==c);
+  save();
+  const btn=document.querySelector(`#cuisine-row .tog[onclick*="${c}"]`);
+  if(btn) btn.classList.remove('on');
+  rR();renderActiveFilters();
+}
+
+
+// ─── RECIPE CARDS ───
+function mkCard(r){
+  const pct=Math.round(score(r)*100);
+  const sv=S.saved.includes(r.id),lk=S.liked.includes(r.id);
+  const isU=!!r.userPosted,isA=(r.id||'').startsWith('ai-');
+  return`<div class="rc" onclick="opR('${r.id}')">
+    <div class="rc-em">${r.emoji||'🍽'}<span class="pct-badge">${pct}%</span></div>
+    <div class="rc-bd">
+      <div class="rc-title">${r.title}</div>
+      <div class="rc-meta">⏱ ${r.time}m · ${r.skill} · ${S.prefs.people}p</div>
+      <div class="match-bar"><div class="match-fill" style="width:${pct}%"></div></div>
+      <div style="margin-bottom:.45rem;">${(r.dietary||[]).map(d=>`<span class="tag td">${d}</span>`).join('')}${isU?'<span class="tag tu">📝 Yours</span>':''}${isA?'<span class="tag ta">✨ AI</span>':''}</div>
+      <div style="display:flex;gap:.4rem;" onclick="event.stopPropagation()">
+        <button class="btn btn-r btn-sm" onclick="opR('${r.id}')">View →</button>
+        <button style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:0;" onclick="tSave('${r.id}',event)">${sv?'❤️':'🤍'}</button>
+        <button style="background:none;border:none;cursor:pointer;font-size:1.05rem;padding:0;" onclick="tLike('${r.id}',event)">${lk?'👍':'👍🏻'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function rR(){
+  const grid=document.getElementById('rg');if(!grid)return;
+  const q=(document.getElementById('search-in')?.value||'').toLowerCase();
+  let list=filtered();
+  if(q)list=list.filter(r=>r.title.toLowerCase().includes(q)||(r.tags||[]).some(t=>t.includes(q))||r.desc.toLowerCase().includes(q));
+  list.sort((a,b)=>score(b)-score(a));
+  const cnt=document.getElementById('rc-count');if(cnt)cnt.textContent=list.length;
+  if(!list.length){grid.innerHTML='<div style="padding:2rem;color:var(--ckl);text-align:center;grid-column:1/-1;">No recipes match your filters. Try relaxing your preferences.</div>';return;}
+  grid.innerHTML=list.map(r=>mkCard(r)).join('');
+}
+
+function rURg(){
+  const g=document.getElementById('user-rg');if(!g)return;
+  const ur=S.userRecipes||[];
+  g.innerHTML=ur.length?ur.map(r=>mkCard(r)).join(''):'<div style="padding:1.2rem;color:var(--ckl);font-size:.85rem;">You haven\'t posted any recipes yet.</div>';
+}
+
+// ─── MODAL ───
+let curId=null;
+function opR(id){
+  const r=allR().find(x=>x.id===id);if(!r)return;curId=id;
+  const scale=Math.max(1,S.prefs.people)/2;
+  const dets=matchDets(r);
+  function sc(a){const v=a*scale;return Number.isInteger(v)?v:parseFloat(v.toFixed(1));}
+  const ings=dets.map(i=>`<div class="ing-li"><div><strong>${sc(i.a)} ${i.u||''}</strong> ${i.n}${i.nt?` <span style="font-size:.77rem;color:var(--ckl);font-style:italic;">— ${i.nt}</span>`:''}</div><span class="${i.hv?'have':'need'}">${i.hv?'✓ Have':'+ Buy'}</span></div>`).join('');
+  const steps=(r.s||[]).map((st,i)=>`<div class="step-li"><div class="step-n">${i+1}</div><div>${st}</div></div>`).join('');
+  document.getElementById('modal-box').innerHTML=`
+    <div class="m-hero">${r.emoji||'🍽'}</div>
+    <div class="m-body">
+      <h2 class="m-title">${r.title}</h2>
+      <div class="m-meta"><span>⏱ ${r.time} min</span><span>🍴 ${r.skill}</span><span>👤 ${S.prefs.people} people</span>${(r.dietary||[]).map(d=>`<span>✓ ${d}</span>`).join('')}</div>
+      <p style="font-size:.85rem;color:var(--ckl);line-height:1.55;margin-bottom:1rem;">${r.desc||''}</p>
+      <div class="sec-lbl" style="margin-top:0;">Ingredients</div>
+      ${ings}
+      <div class="sec-lbl">Method</div>
+      ${steps}
+      <div class="m-acts">
+        <button class="btn btn-g" onclick="markCooked('${id}');clModal()">✅ Cooked it</button>
+        <button class="btn" id="msave-${id}" onclick="tSave('${id}',event)">${S.saved.includes(id)?'❤️ Saved':'🤍 Save'}</button>
+        ${r.userPosted?`<button class="btn btn-sm" onclick="delUR('${id}');clModal()">🗑 Delete</button>`:''}
+      </div>
+    </div>`;
+  const mb=document.getElementById('modal-bg');mb.classList.add('on');mb.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function clModal(){document.getElementById('modal-bg').classList.remove('on');curId=null;}
+
+function tSave(id,e){
+  if(e)e.stopPropagation();
+  S.saved=S.saved.includes(id)?S.saved.filter(x=>x!==id):[...S.saved,id];
+  save();rR();renderSaved();
+  const b=document.getElementById('msave-'+id);if(b)b.textContent=S.saved.includes(id)?'❤️ Saved':'🤍 Save';
+  toast(S.saved.includes(id)?'Saved ❤️':'Removed from saved');
+}
+function tLike(id,e){
+  if(e)e.stopPropagation();
+  const r=allR().find(x=>x.id===id);if(!r)return;
+  if(S.liked.includes(id)){S.liked=S.liked.filter(x=>x!==id);}
+  else{S.liked.push(id);(r.tags||[]).forEach(t=>{S.tasteTags[t]=(S.tasteTags[t]||0)+1;});toast('Liked! Taste profile updated 👍');}
+  save();rR();
+}
+function markCooked(id){
+  const r=allR().find(x=>x.id===id);if(!r)return;
+  if(!S.cooked.includes(id)){S.cooked.push(id);if(!S.saved.includes(id))S.saved.push(id);(r.tags||[]).forEach(t=>{S.tasteTags[t]=(S.tasteTags[t]||0)+2;});save();rR();renderSaved();toast('Marked as cooked 🍽️');}
+}
+
+// ─── AI GENERATION ───
+let aiGo=false;
+async function genAI(){
+  if(aiGo)return;
+  if(!S.ingredients.length){toast('Add ingredients to your fridge first 🧊');gt('fridge');return;}
+  if(!aiReady()){toast('Add your Anthropic API key in the code to enable AI recipes ✨');return;}
+  aiGo=true;
+  const btn=document.getElementById('ai-btn'),res=document.getElementById('ai-result'),sub=document.getElementById('ai-sub');
+  btn.disabled=true;btn.innerHTML='<span class="inl-sp"></span>Thinking…';
+  sub.textContent='Inventing something just for you…';
+  res.style.display='block';
+  res.innerHTML=`<div class="l-box"><div class="lspin"></div><div style="font-size:.95rem;font-weight:600;color:var(--ck);margin-bottom:.5rem;">Cooking up your recipe…</div><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>`;
+  const{people,time,skill,dietary}=S.prefs;
+  const prompt=`You are a creative chef. Invent ONE recipe using these fridge ingredients: ${S.ingredients.join(', ')}.
+Rules: serves ${people}, max ${time} minutes, ${skill} skill level.${dietary.length?` Must be: ${dietary.join(', ')}.`:''}
+Use as many listed ingredients as possible. You may add up to 4 common pantry staples if needed.
+Reply with ONLY a raw JSON object, no markdown fences, no text before or after:
+{"title":"Name","emoji":"🍳","description":"One punchy sentence","time":20,"servings":${people},"ingredients":[{"name":"egg","amount":"3","unit":"","note":"beaten","fromFridge":true},{"name":"salt","amount":"1","unit":"pinch","note":"","fromFridge":false}],"steps":["Step one.","Step two."],"tip":"One helpful tip."}`;
+  try{
+    const d=await anthropicMessages({max_tokens:1200,messages:[{role:'user',content:prompt}]});
+    const raw=(d.content||[]).map(b=>b.text||'').join('');
+    const mx=raw.match(/\{[\s\S]*\}/);
+    if(!mx)throw new Error('No JSON in response');
+    const rcp=JSON.parse(mx[0]);
+    const aiId='ai-'+Date.now();
+    S.aiRecipes=S.aiRecipes||[];
+    S.aiRecipes.unshift({id:aiId,title:rcp.title,emoji:rcp.emoji||'🍳',time:rcp.time||30,skill,dietary:[...dietary],tags:['ai-generated'],desc:rcp.description||'',i:(rcp.ingredients||[]).map(x=>({n:x.name,a:parseFloat(x.amount)||1,u:x.unit||'',nt:x.note||''})),s:rcp.steps||[]});
+    S.aiRecipes=S.aiRecipes.slice(0,12); // keep the library from growing without bound
+    save();
+    const igs=(rcp.ingredients||[]).map(x=>`<div class="ir"><div><strong>${x.amount} ${x.unit||''}</strong> ${x.name}${x.note?` <span style="font-size:.77rem;color:var(--ckl);font-style:italic;">— ${x.note}</span>`:''}</div><span class="${x.fromFridge?'have':'need'}">${x.fromFridge?'✓ Have':'+ Pantry'}</span></div>`).join('');
+    const sts=(rcp.steps||[]).map((st,i)=>`<div class="step-li"><div class="step-n">${i+1}</div><div>${st}</div></div>`).join('');
+    res.innerHTML=`<div class="ai-hdr"><span>✨ AI-generated just for you</span><span>⏱ ${rcp.time} min · ${people} servings</span></div>
+<div class="ai-bd">
+  <div style="display:flex;gap:.9rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:.9rem;">
+    <div style="font-size:3rem;line-height:1;">${rcp.emoji||'🍳'}</div>
+    <div><div class="ai-title">${rcp.title}</div><div class="ai-desc">${rcp.description||''}</div></div>
+  </div>
+  <div class="sec-lbl" style="margin-top:0;">Ingredients</div>${igs}
+  <div class="sec-lbl">Method</div>${sts}
+  ${rcp.tip?`<div class="tip-box">💡 <strong>Tip:</strong> ${rcp.tip}</div>`:''}
+  <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--cs);">
+    <button class="btn btn-g" onclick="markCooked('${aiId}')">✅ Cooked it</button>
+    <button class="btn" onclick="tSave('${aiId}',event)">🤍 Save</button>
+    <button class="btn btn-sm" onclick="genAI()">✨ Generate another</button>
+  </div>
+</div>`;
+    toast('Your recipe is ready! ✨');sub.textContent='AI invents something custom from exactly what you have.';rR();
+  }catch(err){
+    res.innerHTML=`<div class="l-box"><div style="font-size:1.8rem;margin-bottom:.6rem;">😅</div><div style="font-size:.9rem;font-weight:600;margin-bottom:.3rem;">Couldn't generate a recipe</div><div style="font-size:.78rem;color:var(--ckl);word-break:break-word;max-width:480px;margin:0 auto;">${err.message}</div><button class="btn btn-r btn-sm" style="margin-top:.75rem;" onclick="genAI()">Try again</button></div>`;
+    sub.textContent='AI invents something custom from exactly what you have.';
+  }finally{aiGo=false;btn.disabled=false;btn.innerHTML='Generate';}
+}
+
+// ─── POST RECIPE ───
+const EPOOL=['🍝','🍛','🥗','🍜','🌮','🥘','🍳','🥚','🍕','🥙','🫘','🍱','🥣','🍚','🐟','🥩','🍗','🌿','🧀','🍌','🫓','🧆','🍲','🥟','🐠','🍄','🫙','🥑','🥐','🫔'];
+let pfSk='Beginner',pfDt=[],pfEm='🍳';
+function initPF(){
+  const ep=document.getElementById('ep-row');
+  ep.innerHTML=EPOOL.map(e=>`<button class="ep${e===pfEm?' on':''}" onclick="pickEm(this,'${e}')">${e}</button>`).join('');
+  document.getElementById('pf-emoji').value=pfEm;
+}
+function pickEm(btn,e){pfEm=e;document.getElementById('pf-emoji').value=e;document.querySelectorAll('.ep').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function sPFSk(btn,sk){pfSk=sk;document.querySelectorAll('#pf-sk-row .sk').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function tPFDiet(btn,d){if(pfDt.includes(d)){pfDt=pfDt.filter(x=>x!==d);btn.classList.remove('on');}else{pfDt.push(d);btn.classList.add('on');}}
+function clrPF(){['pf-title','pf-desc','pf-ings','pf-steps'].forEach(id=>{document.getElementById(id).value='';});document.getElementById('pf-time').value=30;pfSk='Beginner';pfDt=[];pfEm='🍳';document.querySelectorAll('#pf-sk-row .sk').forEach((b,i)=>b.classList.toggle('on',i===0));document.querySelectorAll('#pf-diet .dt').forEach(b=>b.classList.remove('on'));initPF();}
+function submitRecipe(){
+  const t=document.getElementById('pf-title').value.trim(),ds=document.getElementById('pf-desc').value.trim();
+  const tm=parseInt(document.getElementById('pf-time').value)||30;
+  const ir=document.getElementById('pf-ings').value.trim(),sr=document.getElementById('pf-steps').value.trim();
+  const em=document.getElementById('pf-emoji').value.trim()||pfEm||'🍽';
+  if(!t){toast('Add a recipe name');return;}if(!ir){toast('Add ingredients');return;}if(!sr){toast('Add the steps');return;}
+  const UNITS=['g','kg','mg','ml','l','litre','litres','tbsp','tsp','cup','cups','clove','cloves','slice','slices','pinch','handful','can','cans','tin','tins','oz','lb','lbs','sprig','sprigs','head','heads','bunch','stick','sticks','pot','knob','dash','large','small','medium','ripe'];
+  const ings=ir.split('\n').filter(Boolean).map(line=>{
+    const p=line.trim().split(/\s+/);
+    const am=p[0]||'1';
+    let un='',nm='';
+    // Treat the 2nd token as a unit only when it's a recognised unit word
+    // AND there's still a name left after it (so "3 eggs" -> name "eggs", no unit).
+    if(p.length>=3 && UNITS.includes(p[1].toLowerCase())){un=p[1];nm=p.slice(2).join(' ');}
+    else{nm=p.slice(1).join(' ');}
+    if(!nm)nm=line.trim();
+    return{n:nm,a:parseFloat(am)||1,u:un,nt:''};
+  });
+  const steps=sr.split('\n').filter(Boolean).map(s=>s.trim());
+  const id='user-'+Date.now();
+  S.userRecipes=S.userRecipes||[];
+  S.userRecipes.push({id,title:t,emoji:em,desc:ds,time:tm,skill:pfSk,dietary:[...pfDt],tags:['your-recipe'],i:ings,s:steps,userPosted:true});
+  save();toast('Recipe posted! 🎉');clrPF();rURg();rR();
+}
+function delUR(id){S.userRecipes=(S.userRecipes||[]).filter(r=>r.id!==id);S.saved=S.saved.filter(x=>x!==id);S.liked=S.liked.filter(x=>x!==id);S.cooked=S.cooked.filter(x=>x!==id);save();rURg();rR();renderSaved();toast('Recipe deleted');}
+
+// ─── SAVED ───
+function renderSaved(){
+  const el=document.getElementById('saved-content');if(!el)return;
+  const all=allR();
+  const ck=all.filter(r=>S.cooked.includes(r.id));
+  const wt=all.filter(r=>S.saved.includes(r.id)&&!S.cooked.includes(r.id));
+  const lk=all.filter(r=>S.liked.includes(r.id));
+  if(!ck.length&&!wt.length&&!lk.length){
+    el.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--ckl);"><div style="font-size:2.5rem;margin-bottom:.65rem;">💔</div><p style="font-size:.9rem;">Nothing saved yet.</p><button class="btn btn-r btn-sm" style="margin-top:.75rem;" onclick="gt(\'recipes\')">Browse Recipes</button></div>';return;
+  }
+  let h='';
+  if(ck.length)h+=`<div class="save-sec">🍽️ Cooked (${ck.length})</div><div class="rg">${ck.map(r=>mkCard(r)).join('')}</div>`;
+  if(wt.length)h+=`<div class="save-sec">❤️ Want to try (${wt.length})</div><div class="rg">${wt.map(r=>mkCard(r)).join('')}</div>`;
+  if(lk.length)h+=`<div class="save-sec">👍 Liked (${lk.length})</div><div class="rg">${lk.map(r=>mkCard(r)).join('')}</div>`;
+  el.innerHTML=h;
+}
+
+// ─── MULTIPLAYER (real shared sessions via the Worker) ───
+let mpTimer=null,mpBusy=false,mpLast=null;
+function mkCode(){return Math.random().toString(36).substr(2,6).toUpperCase().replace(/[01OI]/g,'A');}
+function mpEnabled(){return !!BACKEND.URL;}
+function askName(){let n=(S.session&&S.session.me)||'';n=(prompt('Your name (your friends will see this):',n)||'').trim().slice(0,20);return n;}
+async function mpCall(path,body){
+  const resp=await fetch(BACKEND.sessionUrl+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+  if(!resp.ok){let m='Group request failed';try{const e=await resp.json();m=(e.error&&e.error.message)||m;}catch(_){}throw new Error(m);}
+  return resp.json();
+}
+async function crSesh(){
+  if(!mpEnabled()){toast('Group mode needs the backend — see SETUP.md');return;}
+  const me=askName();if(!me)return;
+  const code=mkCode();
+  try{const st=await mpCall('/'+code+'/join',{name:me,ingredients:S.ingredients});S.session={code,me};save();shSesh(st);toast('Session '+code+' created!');}
+  catch(err){toast(err.message);}
+}
+async function joSesh(){
+  if(!mpEnabled()){toast('Group mode needs the backend — see SETUP.md');return;}
+  const code=document.getElementById('join-in').value.trim().toUpperCase();
+  if(code.length<4){toast('Enter a valid code');return;}
+  const me=askName();if(!me)return;
+  try{const st=await mpCall('/'+code+'/join',{name:me,ingredients:S.ingredients});S.session={code,me};save();shSesh(st);toast('Joined '+code+'!');}
+  catch(err){toast(err.message);}
+}
+function shSesh(st){
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('sesh').style.display='block';
+  document.getElementById('s-code').textContent=S.session.code;
+  if(st)renderSession(st);
+  startPolling();
+}
+function startPolling(){stopPolling();mpTimer=setInterval(pollSession,3000);pollSession();}
+function stopPolling(){if(mpTimer){clearInterval(mpTimer);mpTimer=null;}}
+async function pollSession(){
+  if(!S.session||mpBusy)return;mpBusy=true;
+  try{const st=await mpCall('/'+S.session.code+'/sync',{name:S.session.me,ingredients:S.ingredients});renderSession(st);}
+  catch(err){/* transient network blip — keep polling */}
+  finally{mpBusy=false;}
+}
+function combinedFridge(st){
+  const set=new Set();
+  Object.values((st&&st.members)||{}).forEach(m=>(m.ingredients||[]).forEach(i=>set.add(String(i).toLowerCase())));
+  return [...set];
+}
+function scoreFor(r,ings){
+  const m=ings.map(x=>x.toLowerCase());
+  const h=r.i.filter(x=>m.some(u=>u.includes(x.n.toLowerCase())||x.n.toLowerCase().includes(u))).length;
+  return h/(r.i.length||1);
+}
+function renderSession(st){
+  mpLast=st;
+  const members=Object.keys((st&&st.members)||{});
+  document.getElementById('friends-list').innerHTML=members.length
+    ?members.map(f=>`<span class="fr-chip">👤 ${f}${f===S.session.me?' (you)':''}</span>`).join('')
+    :'<span style="font-size:.8rem;color:var(--ckl);">Waiting for friends…</span>';
+  const cf=combinedFridge(st);
+  const note=document.getElementById('mp-fridge-note');
+  if(note)note.textContent=cf.length+' ingredient'+(cf.length===1?'':'s')+' in the shared fridge · '+members.length+' here';
+  if(st&&(st.phase==='voting'||st.phase==='done')){
+    document.getElementById('vote-sec').style.display='block';
+    renderVoteCards(st);
+    if(st.phase==='done'&&st.winner)showWinner(st.winner);
+    else document.getElementById('vote-result').style.display='none';
+  }else{
+    document.getElementById('vote-sec').style.display='none';
+  }
+}
+function renderVoteCards(st){
+  const noms=st.nominees||[],votes=st.votes||{},voters=st.voters||[];
+  const iVoted=voters.includes(S.session.me),done=st.phase==='done';
+  const tot=Object.values(votes).reduce((a,b)=>a+b,0)||1;
+  document.getElementById('vote-cards').innerHTML=noms.map(n=>{
+    const v=votes[n.id]||0,pct=((v/tot)*100).toFixed(0);
+    const btn=(iVoted||done)?'':`<button class="btn btn-r btn-sm" onclick="cVote('${n.id}')">Vote 🙋</button>`;
+    return `<div class="vc"><div style="font-size:1.7rem;">${n.emoji||'🍽'}</div><div style="flex:1;"><div style="font-size:.88rem;font-weight:600;">${n.title}</div><div style="font-size:.72rem;color:var(--ckl);">${v} vote${v===1?'':'s'}</div><div class="vbar"><div class="vfill" style="width:${pct}%"></div></div></div>${btn}</div>`;
+  }).join('');
+}
+async function stVote(){
+  if(!S.session)return;
+  const cf=combinedFridge(mpLast);
+  if(!cf.length){toast('Add ingredients to your fridge first 🧊');return;}
+  const top=[...RECIPES].map(r=>({r,sc:scoreFor(r,cf)})).sort((a,b)=>b.sc-a.sc).slice(0,5).map(x=>x.r);
+  const nominees=top.map(r=>({id:r.id,title:r.title,emoji:r.emoji}));
+  try{const st=await mpCall('/'+S.session.code+'/start',{nominees});renderSession(st);toast('Voting started!');}
+  catch(err){toast(err.message);}
+}
+async function cVote(id){
+  if(!S.session)return;
+  try{const st=await mpCall('/'+S.session.code+'/vote',{name:S.session.me,id});renderSession(st);toast(st.phase==='done'?'Everyone voted! 🎉':'Vote cast!');}
+  catch(err){toast(err.message);}
+}
+function showWinner(w){
+  document.getElementById('vr-emoji').textContent=w.emoji||'🍽';
+  document.getElementById('vr-name').textContent=w.title;
+  document.getElementById('vote-result').style.display='block';
+}
+async function lvSesh(){
+  stopPolling();
+  const sess=S.session;S.session=null;save();
+  document.getElementById('lobby').style.display='block';
+  document.getElementById('sesh').style.display='none';
+  document.getElementById('vote-sec').style.display='none';
+  document.getElementById('vote-result').style.display='none';
+  if(sess){try{await mpCall('/'+sess.code+'/leave',{name:sess.me});}catch(_){}}
+}
+function opVoteW(){const w=mpLast&&mpLast.winner;if(w&&w.id){gt('recipes');setTimeout(()=>opR(w.id),120);}}
+
+// ─── TOAST ───
+function toast(msg){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast';el.textContent=msg;c.appendChild(el);setTimeout(()=>el.remove(),3200);}
+
+// ─── INIT ───
+window.addEventListener('load',()=>{
+  document.getElementById('ing-in').addEventListener('keydown',e=>{if(e.key==='Enter')aIng();});
+  const ji=document.getElementById('join-in');if(ji)ji.addEventListener('keydown',e=>{if(e.key==='Enter')joSesh();});
+  document.getElementById('pf-emoji').addEventListener('input',e=>{pfEm=e.target.value||'🍳';});
+  initPF();
+  // Rejoin an in-progress session after a reload (only if backend is configured).
+  if(S.session&&S.session.me&&mpEnabled()){shSesh();}
+  else if(S.session){S.session=null;save();}
+});
+// Stop polling when the tab is hidden; resume when it returns (saves requests/credits).
+document.addEventListener('visibilitychange',()=>{
+  if(!S.session)return;
+  if(document.hidden)stopPolling();else startPolling();
+});
+</script>
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav" aria-label="Main navigation">
+  <div class="bnav-inner">
+    <button class="bnt on" id="bnt-fridge" onclick="gt('fridge')"><span class="ico">🧊</span>Fridge</button>
+    <button class="bnt" id="bnt-prefs" onclick="gt('prefs')"><span class="ico">⚙️</span>Prefs</button>
+    <button class="bnt" id="bnt-recipes" onclick="gt('recipes')"><span class="ico">🍳</span>Recipes</button>
+    <button class="bnt" id="bnt-post" onclick="gt('post')"><span class="ico">✏️</span>Post</button>
+    <button class="bnt" id="bnt-saved" onclick="gt('saved')"><span class="ico">❤️</span>Saved</button>
+    <button class="bnt" id="bnt-multi" onclick="gt('multi')"><span class="ico">👥</span>Group</button>
+  </div>
+</nav>
+</body>
+</html>
