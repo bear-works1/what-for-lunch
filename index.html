@@ -789,13 +789,13 @@ const save=()=>{try{localStorage.setItem('wfl5',JSON.stringify(S));}catch(e){}};
 const allR=()=>[...(S.aiRecipes||[]),...RECIPES,...(S.userRecipes||[])];
 
 // ─── BACKEND CONFIG ───
-// The app never talks to Anthropic directly — it talks to your Cloudflare Worker,
-// which holds your secret API key, forces the cheap Haiku model, locks requests to
-// this site, and rate-limits abuse. Set this to your deployed Worker base URL.
-// (See SETUP.md, Phase A.) Example: 'https://what-for-lunch.yourname.workers.dev'
+// The app never talks to Anthropic directly — it talks to your Supabase Edge
+// Function, which holds your secret API key, forces the cheap Haiku model, locks
+// requests to this site, and rate-limits abuse. (See SETUP-SUPABASE.md.)
+// Example: 'https://abcdefghijkl.supabase.co/functions/v1/lunch'
 const BACKEND={
-  // ↓↓↓ PASTE your Worker base URL here after deploying (no trailing slash).
-  URL:'',
+  // Your live Supabase Edge Function (deployed). AI + group mode run through this.
+  URL:'https://uqugeewnooaiedmrudgs.supabase.co/functions/v1/lunch',
   get aiUrl(){return this.URL ? this.URL.replace(/\/$/,'')+'/api/messages' : '';},
   get sessionUrl(){return this.URL ? this.URL.replace(/\/$/,'')+'/api/session' : '';}
 };
